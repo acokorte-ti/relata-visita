@@ -1,0 +1,16 @@
+# segredos
+.env
+# ambiente python
+.venv/
+__pycache__/
+*.pyc
+# dados locais (áudios, planilha local, fila de pendentes)
+dados/
+*.jsonl
+# Excel temporário / lock
+~$*
+# IDE / sistema
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
