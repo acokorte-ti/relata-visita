@@ -14,8 +14,8 @@ Fluxo do vendedor (app mobile, PWA):
 
 1. Login com usuário e senha próprios (fica logado no celular).
 2. Dois botões: **INICIAR RELATO DE VISITA POR VOZ** e **INICIAR RELATO DE VISITA POR TEXTO**. Os dois mostram a instrução *"Relate qual cliente foi visitado, a cidade, quem foi o contato com quem você conversou e qual o assunto tratado."*
-3. Voz: botão de microfone (estilo WhatsApp), toca para gravar e toca para terminar; o servidor transcreve (`gpt-4o-mini-transcribe`). Texto: o vendedor digita o relato.
-4. O servidor extrai os campos com `gpt-4o-mini` (JSON), do áudio transcrito ou do texto digitado.
+3. Voz: botão de microfone (estilo WhatsApp), toca para gravar e toca para terminar; o servidor transcreve (`gpt-4o-mini-transcribe`) e extrai os campos com `gpt-4o-mini` (JSON).
+4. Texto: abre direto o formulário completo em branco (com a instrução no topo) para o vendedor preencher campo a campo, sem IA.
 5. Formulário editável: **Nome do vendedor** (do login, só leitura), **Data** (hoje, editável), **Cliente**, **Cidade**, **Contato** (pessoa do cliente), **Ata de reunião**.
 6. **ENVIAR RELATÓRIO** → grava no banco.
 
@@ -125,7 +125,7 @@ Usuários de teste do modo demo: lista `USUARIOS_DEMO` em `backend/app/cli.py` (
 
 - `POST /api/auth/login` | `logout` | `GET /api/auth/eu`. Cookie `relata_sessao` assinado (itsdangerous), `httpOnly`, `SameSite=Strict`. O token leva `id` + `versao_sessao`; trocar senha ou desativar incrementa a versão e derruba as sessões. 5 falhas em 15 min por login+IP → 429.
 - `POST /api/relatos/transcrever` (multipart `audio`): valida formato e 25 MB, salva em `AUDIO_DIR/temp/{usuario_id}_{uuid}{ext}`, transcreve, extrai e devolve o rascunho com `audio_id`.
-- `POST /api/relatos/extrair` (JSON `texto`, mín. 15 caracteres): relato digitado; a IA devolve o mesmo rascunho, com `audio_id` vazio. No modo demo o texto vai inteiro para a ata e os outros campos ficam vazios.
+- `POST /api/relatos/extrair` (JSON `texto`, mín. 15 caracteres): a IA separa um texto livre nos campos e devolve o rascunho, com `audio_id` vazio. **Hoje o app não usa** (o relato por texto abre o formulário em branco); ficou disponível caso se queira voltar a ter uma caixa de texto livre.
 - `POST /api/relatos`: grava o relato. `origem` = `voz` se veio com áudio, senão `texto`. O `audio_id` só é aceito se for do próprio usuário (regex + prefixo), e o arquivo vai de `temp/` para `AUDIO_DIR/{data}_{login}_{cliente}{ext}`.
 - `GET /api/relatos` (filtros `inicio`, `fim`, `cliente`, `vendedor_id`, `busca`, `limite`): o vendedor só vê os próprios; o gerente vê todos. Devolve também `total`, `clientes` e `vendedores` do filtro.
 - `GET /api/relatos/{id}`, `/{id}/audio`, `/exportar.xlsx` (só gerente).
@@ -134,7 +134,7 @@ Usuários de teste do modo demo: lista `USUARIOS_DEMO` em `backend/app/cli.py` (
 
 **IA** (`ia.py`): `transcrever()` usa `language="pt"` e um `prompt` de vocabulário, e renomeia `.opus` para `.ogg`. `PROMPT_EXTRACAO` pede JSON com `cliente`, `cidade`, `contato` ("Nome (Setor)") e `ata`. Regra: **não inventar**, o que não foi dito fica `""`.
 
-**Frontend:** `AppVendedor.tsx` controla as etapas (início → gravar/processando ou escrever → formulário → enviado). O rascunho fica no `localStorage` até ser enviado, então não se perde se o app fechar ou cair a internet. `gravador.ts` usa `MediaRecorder` (webm/opus no Android, mp4 no iPhone), com limite de 10 min e barras de nível do microfone. Tem também "Enviar áudio" para arquivos do WhatsApp. `Dashboard.tsx` desenha os gráficos em HTML/CSS puro (sem biblioteca): série única na cor `#2a78d6` (validada no guia de dataviz), barras finas com valor na ponta e dica ao passar o mouse.
+**Frontend:** `AppVendedor.tsx` controla as etapas (início → gravar → processando → formulário → enviado; "Por texto" vai do início direto ao formulário em branco). O rascunho fica no `localStorage` até ser enviado, então não se perde se o app fechar ou cair a internet. `gravador.ts` usa `MediaRecorder` (webm/opus no Android, mp4 no iPhone), com limite de 10 min e barras de nível do microfone. Tem também "Enviar áudio" para arquivos do WhatsApp. `Dashboard.tsx` desenha os gráficos em HTML/CSS puro (sem biblioteca): série única na cor `#2a78d6` (validada no guia de dataviz), barras finas com valor na ponta e dica ao passar o mouse.
 
 ## 5.1 Identidade visual (protótipo B "Aço escuro", aprovado em 18/11/2026)
 

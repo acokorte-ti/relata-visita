@@ -1,15 +1,15 @@
 // App do vendedor (identidade Açokorte, protótipo B "Aço escuro"):
-// início -> (voz: instrução -> gravação | texto: escrever) -> formulário -> enviado.
+// início -> (voz: instrução -> gravação -> formulário preenchido pela IA | texto: formulário em branco) -> enviado.
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ChevronRight, Keyboard, LoaderCircle, LogOut, Mic, Paperclip, Sparkles, Square } from "lucide-react";
+import { CheckCircle2, ChevronRight, Keyboard, LoaderCircle, LogOut, Mic, Paperclip, Square } from "lucide-react";
 import { api, dataBR, hojeISO, isoDe, type Rascunho } from "../api";
 import { Simbolo } from "../marca";
 import { useSessao } from "../sessao";
 import { AreaTexto, Aviso, Botao, Campo, Entrada, Modal } from "../ui";
 import { extensaoDe, relogio, useGravador } from "./gravador";
 
-type Etapa = "inicio" | "gravar" | "processando" | "escrever" | "formulario" | "enviado";
+type Etapa = "inicio" | "gravar" | "processando" | "formulario" | "enviado";
 
 interface Formulario extends Rascunho {
   data: string;
@@ -40,8 +40,6 @@ export default function AppVendedor() {
   const [form, setForm] = useState<Formulario | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [ultimoCliente, setUltimoCliente] = useState("");
-  const [texto, setTexto] = useState("");
-  const [montando, setMontando] = useState(false);
   const arquivo = useRef<HTMLInputElement>(null);
 
   // Rascunho não enviado (app fechado no meio, sem sinal etc.) volta ao abrir
@@ -87,24 +85,11 @@ export default function AppVendedor() {
 
   const grav = useGravador((audio) => processar(audio));
 
-  async function montarDoTexto(e: FormEvent) {
-    e.preventDefault();
-    if (texto.trim().length < 15) {
-      setErro("Escreva um pouco mais sobre a visita: cliente, cidade, contato e assunto.");
-      return;
-    }
+  // Relato por texto: abre direto o formulário completo, em branco, para o vendedor preencher.
+  function abrirFormularioEmBranco() {
     setErro("");
-    setMontando(true);
-    try {
-      const r = await api.extrairTexto(texto);
-      setForm({ ...r, data: hojeISO() });
-      setTexto("");
-      setEtapa("formulario");
-    } catch (err) {
-      setErro((err as Error).message);
-    } finally {
-      setMontando(false);
-    }
+    setForm({ audio_id: "", transcricao: "", cliente: "", cidade: "", contato: "", ata: "", data: hojeISO() });
+    setEtapa("formulario");
   }
 
   function escolherArquivo(e: ChangeEvent<HTMLInputElement>) {
@@ -138,7 +123,8 @@ export default function AppVendedor() {
   }
 
   function descartar() {
-    if (!confirm("Descartar este relato? O que foi gravado será perdido.")) return;
+    const perde = form?.audio_id ? "O que foi gravado será perdido." : "O que foi preenchido será perdido.";
+    if (!confirm(`Descartar este relato? ${perde}`)) return;
     localStorage.removeItem(chave);
     setForm(null);
     setErro("");
@@ -150,12 +136,14 @@ export default function AppVendedor() {
     setForm((f) => (f ? { ...f, [campo]: e.target.value } : f));
 
   const escura = etapa === "gravar" || etapa === "processando";
+  const porTexto = etapa === "formulario" && !!form && !form.audio_id;
   const subtitulo = {
     inicio: "Vendedor externo", enviado: "Vendedor externo",
     gravar: grav.estado === "gravando" ? "Gravando…" : "Relato por voz", processando: "Montando o relatório…",
-    escrever: "Relato por texto", formulario: "Toque para corrigir",
+    formulario: porTexto ? "Relato por texto" : "Toque para corrigir",
   }[etapa];
-  const tituloTopo = naInicial ? `Olá, ${usuario!.nome.split(" ")[0]}` : etapa === "formulario" ? "Confira o relatório" : "Relato de visita";
+  const tituloTopo = naInicial ? `Olá, ${usuario!.nome.split(" ")[0]}`
+    : etapa === "formulario" ? (porTexto ? "Preencha o relatório" : "Confira o relatório") : "Relato de visita";
 
   return (
     <div className={`mx-auto flex min-h-full max-w-lg flex-col sm:my-6 sm:min-h-0 sm:overflow-hidden sm:rounded-3xl sm:shadow-lg ${escura ? "bg-aco-900" : "bg-neutral-100"}`}>
@@ -197,7 +185,7 @@ export default function AppVendedor() {
               <Quadrado cor="bg-marca-700 active:bg-marca-800" icone={<Mic className="size-7" />} rotulo="Por voz"
                 descricao="Iniciar relato de visita por voz" aoClicar={() => setInstrucao(true)} />
               <Quadrado cor="bg-aco-800 active:bg-aco-900" icone={<Keyboard className="size-7" />} rotulo="Por texto"
-                descricao="Iniciar relato de visita por texto" aoClicar={() => { setErro(""); setEtapa("escrever"); }} />
+                descricao="Iniciar relato de visita por texto" aoClicar={abrirFormularioEmBranco} />
             </div>
 
             <section>
@@ -269,30 +257,12 @@ export default function AppVendedor() {
           </div>
         )}
 
-        {/* ---------------------------------------------------------- relato por texto */}
-        {etapa === "escrever" && (
-          <form onSubmit={montarDoTexto} className="flex flex-1 flex-col gap-4">
-            <div className="rounded-md border-l-4 border-marca-700 bg-white px-4 py-3 text-sm leading-relaxed text-neutral-700">{INSTRUCAO}</div>
-            {erro && <Aviso>{erro}</Aviso>}
-            <div className="flex flex-1 flex-col rounded-xl border border-neutral-200 bg-white p-3">
-              <Campo rotulo="Relato da visita">
-                <AreaTexto value={texto} onChange={(e) => setTexto(e.target.value)} rows={10} autoFocus
-                  placeholder="Visitei a Gerdau em Ouro Branco, falei com o Alex de compras. Ele pediu cotação de 12 lâminas de tesoura rotativa…" />
-              </Campo>
-              <p className="mt-2 text-xs text-neutral-500">A IA separa o texto nos campos do relatório. Você confere antes de enviar.</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Botao type="button" onClick={voltarAoInicio}>Cancelar</Botao>
-              <Botao type="submit" variante="primario" carregando={montando}>
-                {!montando && <Sparkles className="size-4" aria-hidden />} Montar
-              </Botao>
-            </div>
-          </form>
-        )}
-
         {/* ---------------------------------------------------------- conferir e enviar */}
         {etapa === "formulario" && form && (
           <form onSubmit={enviar} className="flex flex-1 flex-col gap-4">
+            {porTexto && (
+              <div className="rounded-md border-l-4 border-marca-700 bg-white px-4 py-3 text-sm leading-relaxed text-neutral-700">{INSTRUCAO}</div>
+            )}
             {erro && <Aviso>{erro}</Aviso>}
             <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-3">
               <div className="grid grid-cols-2 gap-2">
@@ -300,14 +270,17 @@ export default function AppVendedor() {
                 <Campo rotulo="Data"><Entrada type="date" value={form.data} onChange={set("data")} max={hojeISO()} required /></Campo>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Campo rotulo="Cliente"><Entrada value={form.cliente} onChange={set("cliente")} required /></Campo>
+                <Campo rotulo="Cliente"><Entrada value={form.cliente} onChange={set("cliente")} required autoFocus={porTexto} /></Campo>
                 <Campo rotulo="Cidade"><Entrada value={form.cidade} onChange={set("cidade")} /></Campo>
               </div>
               <Campo rotulo="Contato"><Entrada value={form.contato} onChange={set("contato")} placeholder="Nome (setor)" /></Campo>
-              <Campo rotulo="Ata de reunião"><AreaTexto value={form.ata} onChange={set("ata")} rows={6} /></Campo>
+              <Campo rotulo="Ata de reunião">
+                <AreaTexto value={form.ata} onChange={set("ata")} rows={porTexto ? 8 : 6}
+                  placeholder={porTexto ? "O que foi tratado, pedidos, problemas e o que ficou combinado" : undefined} />
+              </Campo>
               {form.transcricao && (
                 <details className="rounded-md bg-neutral-100 px-3 py-2 text-sm text-neutral-600">
-                  <summary className="cursor-pointer font-semibold">{form.audio_id ? "O que você falou" : "O que você escreveu"}</summary>
+                  <summary className="cursor-pointer font-semibold">O que você falou</summary>
                   <p className="mt-2 leading-relaxed">{form.transcricao}</p>
                 </details>
               )}
