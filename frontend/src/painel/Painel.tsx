@@ -1,11 +1,13 @@
 // Painel web do gerente: menu lateral + páginas Relatórios e Vendedores.
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
-import { FileText, LogOut, Mic, Users } from "lucide-react";
+import { ChartColumn, FileText, LogOut, Mic, Users } from "lucide-react";
 import { useSessao } from "../sessao";
+import Dashboard from "./Dashboard";
 import Relatorios from "./Relatorios";
 import Vendedores from "./Vendedores";
 
 const itens = [
+  { para: "/painel/dashboard", rotulo: "Dashboard", Icone: ChartColumn },
   { para: "/painel/relatorios", rotulo: "Relatórios", Icone: FileText },
   { para: "/painel/vendedores", rotulo: "Vendedores", Icone: Users },
 ];
@@ -40,9 +42,10 @@ export default function Painel() {
       </aside>
       <main className="min-w-0 flex-1 p-4 md:p-8">
         <Routes>
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="relatorios" element={<Relatorios />} />
           <Route path="vendedores" element={<Vendedores />} />
-          <Route path="*" element={<Navigate to="relatorios" replace />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Routes>
       </main>
     </div>

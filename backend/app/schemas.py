@@ -47,6 +47,18 @@ class Rascunho(BaseModel):
     ata: str
 
 
+class TextoRelato(BaseModel):
+    texto: str = Field(max_length=20000)
+
+    @field_validator("texto")
+    @classmethod
+    def _minimo(cls, v: str) -> str:
+        v = v.strip()
+        if len(v) < 15:
+            raise ValueError("Escreva um pouco mais sobre a visita: cliente, cidade, contato e assunto.")
+        return v
+
+
 class RelatoCriar(BaseModel):
     data: date
     cliente: str = Field(min_length=1, max_length=200)
@@ -81,6 +93,7 @@ class RelatoOut(BaseModel):
     ata: str
     transcricao: str
     tem_audio: bool
+    origem: str
     criado_em: datetime
 
 

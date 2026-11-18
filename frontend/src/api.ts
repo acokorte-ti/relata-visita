@@ -30,6 +30,7 @@ export interface Relato {
   ata: string;
   transcricao: string;
   tem_audio: boolean;
+  origem: "voz" | "texto";
   criado_em: string;
 }
 
@@ -47,6 +48,24 @@ export interface FiltrosRelatos {
   vendedor_id?: number | "";
   busca?: string;
   limite?: number;
+}
+
+export interface Dashboard {
+  resumo: {
+    relatos: number;
+    clientes: number;
+    vendedores_com_relato: number;
+    vendedores_ativos: number;
+    media_por_vendedor: number;
+    por_voz: number;
+    por_texto: number;
+    dias_no_periodo: number;
+  };
+  por_semana: { inicio: string; total: number }[];
+  por_vendedor: { vendedor_id: number; nome: string; total: number; clientes: number; ultima: string | null }[];
+  top_clientes: { cliente: string; total: number; vendedores: string[]; ultima: string }[];
+  cliente_vendedor: { cliente: string; vendedor: string; total: number; ultima: string }[];
+  clientes_sem_visita: { cliente: string; ultima: string; dias: number; vendedor: string }[];
 }
 
 export class ErroApi extends Error {
@@ -103,6 +122,8 @@ export const api = {
     fd.append("audio", audio, nome);
     return pedir<Rascunho>("/api/relatos/transcrever", { method: "POST", body: fd });
   },
+  extrairTexto: (texto: string) => pedir<Rascunho>("/api/relatos/extrair", json("POST", { texto })),
+  dashboard: (f: FiltrosRelatos & { dias_alerta?: number }) => pedir<Dashboard>(`/api/dashboard${query(f)}`),
   enviarRelato: (r: Omit<Rascunho, "audio_id"> & { audio_id: string; data: string }) =>
     pedir<Relato>("/api/relatos", json("POST", r)),
   relatos: (f: FiltrosRelatos) => pedir<RelatoLista>(`/api/relatos${query(f)}`),

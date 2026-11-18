@@ -1,13 +1,13 @@
-// App do vendedor: início -> instrução -> gravação -> formulário -> enviado.
+// App do vendedor: início -> (voz: instrução -> gravação | texto: escrever) -> formulário -> enviado.
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ChevronRight, LoaderCircle, LogOut, Mic, Paperclip, Square, X } from "lucide-react";
+import { CheckCircle2, ChevronRight, Keyboard, LoaderCircle, LogOut, Mic, Paperclip, Sparkles, Square, X } from "lucide-react";
 import { api, dataBR, hojeISO, isoDe, type Rascunho } from "../api";
 import { useSessao } from "../sessao";
 import { AreaTexto, Aviso, Botao, Campo, Entrada, Modal } from "../ui";
 import { extensaoDe, relogio, useGravador } from "./gravador";
 
-type Etapa = "inicio" | "gravar" | "processando" | "formulario" | "enviado";
+type Etapa = "inicio" | "gravar" | "processando" | "escrever" | "formulario" | "enviado";
 
 interface Formulario extends Rascunho {
   data: string;
@@ -33,6 +33,8 @@ export default function AppVendedor() {
   const [form, setForm] = useState<Formulario | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [ultimoCliente, setUltimoCliente] = useState("");
+  const [texto, setTexto] = useState("");
+  const [montando, setMontando] = useState(false);
   const arquivo = useRef<HTMLInputElement>(null);
 
   // Rascunho não enviado (app fechado no meio, sem sinal etc.) volta ao abrir
@@ -77,6 +79,26 @@ export default function AppVendedor() {
   }
 
   const grav = useGravador((audio) => processar(audio));
+
+  async function montarDoTexto(e: FormEvent) {
+    e.preventDefault();
+    if (texto.trim().length < 15) {
+      setErro("Escreva um pouco mais sobre a visita: cliente, cidade, contato e assunto.");
+      return;
+    }
+    setErro("");
+    setMontando(true);
+    try {
+      const r = await api.extrairTexto(texto);
+      setForm({ ...r, data: hojeISO() });
+      setTexto("");
+      setEtapa("formulario");
+    } catch (err) {
+      setErro((err as Error).message);
+    } finally {
+      setMontando(false);
+    }
+  }
 
   function escolherArquivo(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -164,13 +186,20 @@ export default function AppVendedor() {
               )}
             </section>
 
-            <div className="mt-auto pt-8">
+            <div className="mt-auto flex flex-col gap-3 pt-8">
               <button
                 onClick={() => setInstrucao(true)}
-                className="flex w-full flex-col items-center gap-2 rounded-2xl bg-aco-700 px-6 py-7 text-white shadow-sm transition active:scale-[0.98] active:bg-aco-800"
+                className="flex w-full flex-col items-center gap-2 rounded-2xl bg-aco-700 px-6 py-6 text-white shadow-sm transition active:scale-[0.98] active:bg-aco-800"
               >
                 <Mic className="size-9" aria-hidden />
-                <span className="text-lg font-semibold tracking-wide">INICIAR RELATO DE VISITA</span>
+                <span className="text-base font-semibold tracking-wide">INICIAR RELATO DE VISITA POR VOZ</span>
+              </button>
+              <button
+                onClick={() => { setErro(""); setEtapa("escrever"); }}
+                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-6 py-5 text-aco-800 ring-2 ring-aco-700 transition active:scale-[0.98] active:bg-aco-50"
+              >
+                <Keyboard className="size-6" aria-hidden />
+                <span className="text-base font-semibold tracking-wide">INICIAR RELATO DE VISITA POR TEXTO</span>
               </button>
             </div>
           </>
@@ -233,6 +262,26 @@ export default function AppVendedor() {
           </div>
         )}
 
+        {etapa === "escrever" && (
+          <form onSubmit={montarDoTexto} className="flex flex-1 flex-col gap-4">
+            <div className="rounded-xl bg-aco-50 px-4 py-3 text-sm leading-relaxed text-aco-800">{INSTRUCAO}</div>
+            {erro && <Aviso>{erro}</Aviso>}
+            <Campo rotulo="Relato da visita">
+              <AreaTexto value={texto} onChange={(e) => setTexto(e.target.value)} rows={10} autoFocus
+                placeholder="Visitei a Gerdau em Ouro Branco, falei com o Alex de compras. Ele pediu cotação de 20 t de chapa grossa…" />
+            </Campo>
+            <p className="text-xs text-slate-500">A IA separa o texto nos campos do relatório. Você confere antes de enviar.</p>
+            <div className="mt-auto flex flex-col gap-2 pt-4">
+              <Botao type="submit" variante="primario" carregando={montando} className="py-4 text-base">
+                {!montando && <Sparkles className="size-5" aria-hidden />} Montar relatório
+              </Botao>
+              <Botao type="button" variante="fantasma" onClick={() => { setErro(""); setEtapa("inicio"); }}>
+                Cancelar
+              </Botao>
+            </div>
+          </form>
+        )}
+
         {etapa === "formulario" && form && (
           <form onSubmit={enviar} className="flex flex-1 flex-col gap-4">
             <div>
@@ -248,7 +297,7 @@ export default function AppVendedor() {
             <Campo rotulo="Ata de reunião"><AreaTexto value={form.ata} onChange={set("ata")} rows={7} /></Campo>
             {form.transcricao && (
               <details className="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <summary className="cursor-pointer font-medium">O que você falou</summary>
+                <summary className="cursor-pointer font-medium">{form.audio_id ? "O que você falou" : "O que você escreveu"}</summary>
                 <p className="mt-2 leading-relaxed">{form.transcricao}</p>
               </details>
             )}

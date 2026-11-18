@@ -13,13 +13,13 @@ Contexto do projeto para o Claude Code. Leia este arquivo inteiro antes de mexer
 Fluxo do vendedor (app mobile, PWA):
 
 1. Login com usuário e senha próprios (fica logado no celular).
-2. Botão **INICIAR RELATO DE VISITA** → mensagem: *"Relate qual cliente foi visitado, a cidade, quem foi o contato com quem você conversou e qual o assunto tratado."* → **OK**.
-3. Botão de microfone (estilo WhatsApp): toca para gravar, toca para terminar.
-4. O servidor transcreve (`gpt-4o-mini-transcribe`) e extrai os campos com `gpt-4o-mini` (JSON).
+2. Dois botões: **INICIAR RELATO DE VISITA POR VOZ** e **INICIAR RELATO DE VISITA POR TEXTO**. Os dois mostram a instrução *"Relate qual cliente foi visitado, a cidade, quem foi o contato com quem você conversou e qual o assunto tratado."*
+3. Voz: botão de microfone (estilo WhatsApp), toca para gravar e toca para terminar; o servidor transcreve (`gpt-4o-mini-transcribe`). Texto: o vendedor digita o relato.
+4. O servidor extrai os campos com `gpt-4o-mini` (JSON), do áudio transcrito ou do texto digitado.
 5. Formulário editável: **Nome do vendedor** (do login, só leitura), **Data** (hoje, editável), **Cliente**, **Cidade**, **Contato** (pessoa do cliente), **Ata de reunião**.
 6. **ENVIAR RELATÓRIO** → grava no banco.
 
-Painel do gerente (web): todos os relatórios de todos os vendedores, filtro por período, vendedor, cliente e busca na ata, detalhe com áudio e transcrição, exportação para Excel e cadastro de vendedores (criar, nova senha, desativar).
+Painel do gerente (web): aba **Dashboard** (indicadores, gráficos e alertas), aba **Relatórios** com todos os relatórios de todos os vendedores, filtro por período, vendedor, cliente e busca na ata, detalhe com áudio e transcrição, exportação para Excel e cadastro de vendedores (criar, nova senha, desativar).
 
 **Usuários:** vendedores externos (pouca paciência para tecnologia, usam o celular na rua) e o gerente de vendas.
 
@@ -56,8 +56,8 @@ relata-visita/
 │   │   ├── excel.py         # exportação .xlsx
 │   │   ├── migracoes.py     # roda o Alembic no startup
 │   │   ├── cli.py           # criar-usuario, semear-demo
-│   │   └── routers/         # auth.py, relatos.py, usuarios.py
-│   ├── alembic/versions/    # migrações (0001_inicial.py)
+│   │   └── routers/         # auth.py, relatos.py, usuarios.py, dashboard.py
+│   ├── alembic/versions/    # migrações (0001_inicial, 0002_origem_relato)
 │   ├── tests/               # pytest (modo demo + SQLite temporário)
 │   └── requirements.txt
 ├── frontend/
@@ -66,13 +66,13 @@ relata-visita/
 │   │   ├── api.ts           # cliente da API + tipos + datas
 │   │   ├── sessao.tsx, ui.tsx, Login.tsx
 │   │   ├── vendedor/        # AppVendedor.tsx, gravador.ts (MediaRecorder)
-│   │   └── painel/          # Painel.tsx, Relatorios.tsx, Vendedores.tsx
+│   │   └── painel/          # Painel.tsx, Dashboard.tsx, Relatorios.tsx, Vendedores.tsx
 │   ├── public/              # ícones da PWA
 │   └── vite.config.ts       # PWA (manifest + service worker), proxy /api
 ├── teste_ambiente.py        # checa pacotes, .env, banco, pasta dos áudios, chave (e transcreve um áudio)
 ├── iniciar.bat              # sobe o servidor na porta 8502
 ├── .env.exemplo
-├── PASSO_A_PASSO.md         # instalação + roteiro de testes T1-T11
+├── PASSO_A_PASSO.md         # instalação + roteiro de testes T1-T13
 ├── README.md
 ├── docs/Cronograma_Relata_Visita.xlsx
 └── dados/                   # (gitignored) relata.db (SQLite de dev), audios/
@@ -125,26 +125,30 @@ Usuários de teste do modo demo: lista `USUARIOS_DEMO` em `backend/app/cli.py` (
 
 - `POST /api/auth/login` | `logout` | `GET /api/auth/eu`. Cookie `relata_sessao` assinado (itsdangerous), `httpOnly`, `SameSite=Strict`. O token leva `id` + `versao_sessao`; trocar senha ou desativar incrementa a versão e derruba as sessões. 5 falhas em 15 min por login+IP → 429.
 - `POST /api/relatos/transcrever` (multipart `audio`): valida formato e 25 MB, salva em `AUDIO_DIR/temp/{usuario_id}_{uuid}{ext}`, transcreve, extrai e devolve o rascunho com `audio_id`.
-- `POST /api/relatos`: grava o relato. O `audio_id` só é aceito se for do próprio usuário (regex + prefixo), e o arquivo vai de `temp/` para `AUDIO_DIR/{data}_{login}_{cliente}{ext}`.
+- `POST /api/relatos/extrair` (JSON `texto`, mín. 15 caracteres): relato digitado; a IA devolve o mesmo rascunho, com `audio_id` vazio. No modo demo o texto vai inteiro para a ata e os outros campos ficam vazios.
+- `POST /api/relatos`: grava o relato. `origem` = `voz` se veio com áudio, senão `texto`. O `audio_id` só é aceito se for do próprio usuário (regex + prefixo), e o arquivo vai de `temp/` para `AUDIO_DIR/{data}_{login}_{cliente}{ext}`.
 - `GET /api/relatos` (filtros `inicio`, `fim`, `cliente`, `vendedor_id`, `busca`, `limite`): o vendedor só vê os próprios; o gerente vê todos. Devolve também `total`, `clientes` e `vendedores` do filtro.
 - `GET /api/relatos/{id}`, `/{id}/audio`, `/exportar.xlsx` (só gerente).
+- `GET /api/dashboard` (só gerente; filtros `inicio`, `fim` — padrão últimos 90 dias —, `vendedor_id`, `cliente`, `dias_alerta`=30): resumo (visitas, clientes, vendedores visitando de ativos, médias, voz × texto), visitas por semana, por vendedor (inclui ativos com 0), top 10 clientes, quem visitou cada cliente, clientes sem visita há `dias_alerta`+ dias (todo o histórico). Agrega em Python, juntando grafias do mesmo cliente (caixa e espaços).
 - `/api/usuarios` (só gerente): listar, criar, alterar (nome, perfil, ativo, senha). O gerente não pode desativar nem rebaixar a si mesmo.
 
 **IA** (`ia.py`): `transcrever()` usa `language="pt"` e um `prompt` de vocabulário, e renomeia `.opus` para `.ogg`. `PROMPT_EXTRACAO` pede JSON com `cliente`, `cidade`, `contato` ("Nome (Setor)") e `ata`. Regra: **não inventar**, o que não foi dito fica `""`.
 
-**Frontend:** `AppVendedor.tsx` controla as etapas (início → gravar → processando → formulário → enviado). O rascunho fica no `localStorage` até ser enviado, então não se perde se o app fechar ou cair a internet. `gravador.ts` usa `MediaRecorder` (webm/opus no Android, mp4 no iPhone), com limite de 10 min e barras de nível do microfone. Tem também "Enviar áudio" para arquivos do WhatsApp.
+**Frontend:** `AppVendedor.tsx` controla as etapas (início → gravar/processando ou escrever → formulário → enviado). O rascunho fica no `localStorage` até ser enviado, então não se perde se o app fechar ou cair a internet. `gravador.ts` usa `MediaRecorder` (webm/opus no Android, mp4 no iPhone), com limite de 10 min e barras de nível do microfone. Tem também "Enviar áudio" para arquivos do WhatsApp. `Dashboard.tsx` desenha os gráficos em HTML/CSS puro (sem biblioteca): série única na cor `#2a78d6` (validada no guia de dataviz), barras finas com valor na ponta e dica ao passar o mouse.
 
 ## 6. Estado atual (18/11/2026)
 
 **Feito:**
 
-- [x] Backend FastAPI com login por usuário, perfis vendedor/gerente, relatos, exportação Excel e migrações. 11 testes `pytest` passando.
+- [x] Backend FastAPI com login por usuário, perfis vendedor/gerente, relatos, exportação Excel e migrações.
 - [x] PWA do vendedor e painel do gerente, testados no navegador em modo demo (login, instrução, envio de áudio, formulário editável, envio, painel com filtros, detalhe e vendedores).
 - [x] `teste_ambiente.py`, `iniciar.bat`, `PASSO_A_PASSO.md` e README atualizados.
+- [x] Relato por texto (botão próprio) e aba Dashboard do gerente, testados no navegador. 13 testes `pytest` passando.
+- [x] Gravação pelo microfone testada pelo usuário no Chrome em `localhost` (18/11).
 
 **Pendente:**
 
-- [ ] **Gravação pelo microfone** não foi testada num navegador real (o navegador interno do Claude bloqueia o microfone). Testar no Chrome em `localhost` e, depois do HTTPS, no Android e no iPhone.
+- [ ] **Gravação no celular** (Android e iPhone) só depois do HTTPS.
 - [ ] **Ainda não testado com a API real.** Falta a conta em platform.openai.com (billing, limite e chave do projeto `relata-visita`).
 - [ ] PostgreSQL não está instalado na máquina de dev. O código foi testado só com SQLite.
 - [ ] Busca na ata usa `ILIKE` (não acha plural/acento diferente). Trocar por full-text search do PostgreSQL em português quando migrar.

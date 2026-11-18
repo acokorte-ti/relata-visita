@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config
 from .migracoes import migrar
-from .routers import auth, relatos, usuarios
+from .routers import auth, dashboard, relatos, usuarios
 
 
 @asynccontextmanager
@@ -24,6 +24,7 @@ app = FastAPI(title="Relata Visita", version="2.0", lifespan=ciclo,
 app.include_router(auth.router)
 app.include_router(relatos.router)
 app.include_router(usuarios.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/api/status")

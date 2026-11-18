@@ -46,6 +46,9 @@ Transcrição:
 
 
 def extrair_campos(texto: str) -> dict[str, str]:
+    if config.DEMO and texto.strip() != _TEXTO_DEMO:
+        # relato digitado no modo demo: sem IA, o texto vai inteiro para a ata
+        return {"cliente": "", "cidade": "", "contato": "", "ata": texto.strip()}
     if config.DEMO:
         return {
             "cliente": "Gerdau",

@@ -14,7 +14,7 @@ from .. import config, ia
 from ..db import get_db
 from ..excel import gerar_xlsx
 from ..models import Relato, Usuario
-from ..schemas import Rascunho, RelatoCriar, RelatoLista, RelatoOut
+from ..schemas import Rascunho, RelatoCriar, RelatoLista, RelatoOut, TextoRelato
 from ..seguranca import exigir_gerente, usuario_atual
 
 router = APIRouter(prefix="/api/relatos", tags=["relatos"])
@@ -54,7 +54,8 @@ def _para_saida(r: Relato) -> RelatoOut:
     return RelatoOut(
         id=r.id, data=r.data, vendedor_id=r.vendedor_id, vendedor_nome=r.vendedor.nome,
         cliente=r.cliente, cidade=r.cidade, contato=r.contato, ata=r.ata,
-        transcricao=r.transcricao, tem_audio=bool(r.audio_arquivo), criado_em=r.criado_em)
+        transcricao=r.transcricao, tem_audio=bool(r.audio_arquivo), origem=r.origem,
+        criado_em=r.criado_em)
 
 
 @router.post("/transcrever", response_model=Rascunho)
@@ -83,6 +84,17 @@ async def transcrever(audio: UploadFile = File(...), usuario: Usuario = Depends(
     return Rascunho(audio_id=audio_id, transcricao=texto, **campos)
 
 
+@router.post("/extrair", response_model=Rascunho)
+def extrair(dados: TextoRelato, usuario: Usuario = Depends(usuario_atual)):
+    """Relato digitado: a IA organiza o texto nos campos do formulário."""
+    try:
+        campos = ia.extrair_campos(dados.texto)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY,
+                            "Não foi possível organizar o texto agora. Tente de novo em instantes.") from e
+    return Rascunho(audio_id="", transcricao=dados.texto, **campos)
+
+
 @router.post("", response_model=RelatoOut, status_code=status.HTTP_201_CREATED)
 def criar(dados: RelatoCriar, db: Session = Depends(get_db),
           usuario: Usuario = Depends(usuario_atual)):
@@ -98,7 +110,8 @@ def criar(dados: RelatoCriar, db: Session = Depends(get_db),
         temp.replace(config.AUDIO_DIR / audio_final)
     relato = Relato(vendedor_id=usuario.id, data=dados.data, cliente=dados.cliente,
                     cidade=dados.cidade, contato=dados.contato, ata=dados.ata,
-                    transcricao=dados.transcricao, audio_arquivo=audio_final)
+                    transcricao=dados.transcricao, audio_arquivo=audio_final,
+                    origem="voz" if audio_final else "texto")
     db.add(relato)
     db.commit()
     db.refresh(relato)

@@ -1,5 +1,5 @@
 import io
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from openpyxl import load_workbook
 
@@ -153,3 +153,61 @@ def test_gerente_cadastra_vendedor(client):
 def test_status_e_spa(client):
     assert client.get("/api/status").json() == {"ok": True, "demo": True}
     assert client.get("/api/nao-existe").status_code == 404
+
+
+# ------------------------------------------------------------------ relato por texto
+def test_relato_por_texto(client):
+    criar("carlos")
+    entrar(client, "carlos")
+    assert client.post("/api/relatos/extrair", json={"texto": "curto"}).status_code == 422
+    texto = "Visitei a Gerdau em Ouro Branco, falei com o Alex de compras sobre chapa grossa."
+    r = client.post("/api/relatos/extrair", json={"texto": texto})
+    assert r.status_code == 200
+    rasc = r.json()
+    assert rasc["audio_id"] == "" and rasc["transcricao"] == texto
+    assert rasc["ata"] == texto and rasc["cliente"] == ""  # modo demo: sem IA, texto vai para a ata
+    r = client.post("/api/relatos", json={"data": date.today().isoformat(), "cliente": "Gerdau",
+                                          "ata": rasc["ata"], "transcricao": texto})
+    assert r.status_code == 201
+    assert r.json()["origem"] == "texto" and not r.json()["tem_audio"]
+    assert _enviar_relato(client).json()["origem"] == "voz"
+
+
+# ------------------------------------------------------------------ dashboard
+def test_dashboard(client):
+    criar("gerente", "gerente")
+    criar("carlos", nome="Carlos")
+    criar("marina", nome="Marina")
+    criar("parado", nome="Parado")  # vendedor ativo sem relato
+    hoje = date.today()
+    antigo = (hoje - timedelta(days=60)).isoformat()
+    entrar(client, "carlos")
+    _enviar_relato(client, data=hoje.isoformat())
+    _enviar_relato(client, cliente="GERDAU ", data=hoje.isoformat())  # mesma empresa, outra grafia
+    _enviar_relato(client, cliente="Metalúrgica Sul", data=antigo)
+    entrar(client, "marina")
+    _enviar_relato(client, cliente="Gerdau", data=hoje.isoformat())
+    client.post("/api/relatos", json={"data": hoje.isoformat(), "cliente": "Usiminas", "ata": "x"})
+
+    assert client.get("/api/dashboard").status_code == 403  # vendedor não vê
+    entrar(client, "gerente")
+    d = client.get("/api/dashboard", params={"inicio": (hoje - timedelta(days=89)).isoformat()}).json()
+    res = d["resumo"]
+    assert (res["relatos"], res["clientes"], res["vendedores_com_relato"]) == (5, 3, 2)
+    assert res["vendedores_ativos"] == 3 and (res["por_voz"], res["por_texto"]) == (4, 1)
+    assert d["top_clientes"][0]["cliente"] == "Gerdau" and d["top_clientes"][0]["total"] == 3
+    assert d["top_clientes"][0]["vendedores"] == ["Carlos", "Marina"]
+    nomes = [v["nome"] for v in d["por_vendedor"]]
+    assert nomes == ["Carlos", "Marina", "Parado"] and d["por_vendedor"][2]["total"] == 0
+    assert {(c["cliente"], c["vendedor"], c["total"]) for c in d["cliente_vendedor"]} >= {
+        ("Gerdau", "Carlos", 2), ("Gerdau", "Marina", 1)}
+    assert [s["cliente"] for s in d["clientes_sem_visita"]] == ["Metalúrgica Sul"]
+    assert sum(s["total"] for s in d["por_semana"]) == 5
+
+    # filtro por período: só hoje
+    d = client.get("/api/dashboard", params={"inicio": hoje.isoformat()}).json()
+    assert d["resumo"]["relatos"] == 4
+    # filtro por vendedor
+    vid = next(v["vendedor_id"] for v in d["por_vendedor"] if v["nome"] == "Marina")
+    d = client.get("/api/dashboard", params={"vendedor_id": vid}).json()
+    assert d["resumo"]["relatos"] == 2 and [v["nome"] for v in d["por_vendedor"]] == ["Marina"]

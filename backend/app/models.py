@@ -36,6 +36,7 @@ class Relato(Base):
     ata: Mapped[str] = mapped_column(Text, default="")
     transcricao: Mapped[str] = mapped_column(Text, default="")
     audio_arquivo: Mapped[str] = mapped_column(String(255), default="")
+    origem: Mapped[str] = mapped_column(String(10), default="voz")  # voz | texto
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, server_default=func.now())
 
     vendedor: Mapped[Usuario] = relationship(back_populates="relatos")

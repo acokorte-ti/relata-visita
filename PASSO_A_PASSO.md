@@ -124,7 +124,9 @@ cd C:\Users\eduardo.macedo\Documents\relata-visita
 | T8 | Login | Senha errada 5 vezes | Bloqueio de 15 minutos |
 | T9 | Vendedor desativado | Gerente desativa o vendedor no painel | O vendedor é deslogado e não entra mais |
 | T10 | Painel | Filtros de data, vendedor, cliente, busca; abrir um relato; ouvir o áudio; **Exportar Excel** | Tudo bate com o que foi enviado |
-| T11 | Custo | platform.openai.com → **Usage** | Centavos de dólar por dia de teste |
+| T11 | Relato por texto | **INICIAR RELATO DE VISITA POR TEXTO**, digitar o relato, **Montar relatório** | Campos preenchidos pela IA (no modo demo, o texto vai para a ata), envia e aparece no painel |
+| T12 | Dashboard | Painel → **Dashboard**, trocar período, vendedor e cliente | Números, gráficos e tabelas mudam com o filtro; "Sem visita há 30+ dias" lista clientes esquecidos |
+| T13 | Custo | platform.openai.com → **Usage** | Centavos de dólar por dia de teste |
 
 ## Passo 10: Desenvolver e ajustar
 

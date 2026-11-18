@@ -2,8 +2,8 @@
 
 App da ACOKORTE para os vendedores externos relatarem as visitas a clientes **falando**, sem preencher planilha.
 
-- **App do vendedor (celular, PWA):** login, botão **INICIAR RELATO DE VISITA**, grava a fala, a IA preenche o formulário (vendedor, data, cliente, cidade, contato, ata de reunião), o vendedor confere, corrige e clica em **ENVIAR RELATÓRIO**.
-- **Painel do gerente (web):** todos os relatórios de todos os vendedores, filtro por data, vendedor, cliente e busca na ata, áudio original, exportação para Excel e cadastro de vendedores.
+- **App do vendedor (celular, PWA):** login, botões **INICIAR RELATO DE VISITA POR VOZ** e **POR TEXTO**, grava a fala ou recebe o texto, a IA preenche o formulário (vendedor, data, cliente, cidade, contato, ata de reunião), o vendedor confere, corrige e clica em **ENVIAR RELATÓRIO**.
+- **Painel do gerente (web):** dashboard (visitas por semana, quem visitou mais, clientes mais visitados, quem visitou cada cliente, clientes sem visita há 30+ dias), todos os relatórios de todos os vendedores, filtro por data, vendedor, cliente e busca na ata, áudio original, exportação para Excel e cadastro de vendedores.
 
 Transcrição e extração pela API da OpenAI (`gpt-4o-mini-transcribe` + `gpt-4o-mini`). Sem chave, roda em **modo demo**.
 
