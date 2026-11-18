@@ -40,9 +40,9 @@ def criar_usuario(args) -> int:
 # Usuários de teste para o MODO DEMO (sem chave da OpenAI e banco SQLite local).
 # Nunca use em produção: o comando se recusa a rodar fora do modo demo.
 USUARIOS_DEMO = [
-    ("gerente", "Gerente de Vendas (teste)", "gerente", "demo-gerente-123"),
-    ("carlos", "Carlos Souza (teste)", "vendedor", "demo-vendedor-123"),
-    ("marina", "Marina Alves (teste)", "vendedor", "demo-vendedor-123"),
+    ("gerente", "Gerente de Vendas (teste)", "gerente", "gerente"),
+    ("marcos", "Marcos (teste)", "vendedor", "marcos"),
+    ("renato", "Renato (teste)", "vendedor", "renato"),
 ]
 
 
@@ -54,9 +54,15 @@ def semear_demo(_args) -> int:
     migrar()
     with SessionLocal() as db:
         for login, nome, perfil, senha in USUARIOS_DEMO:
-            if not db.scalar(select(Usuario).where(Usuario.login == login)):
+            u = db.scalar(select(Usuario).where(Usuario.login == login))
+            if not u:
                 db.add(Usuario(nome=nome, login=login, senha_hash=gerar_hash(senha), perfil=perfil))
                 print(f"criado: {login} ({perfil})")
+            else:  # já existe: volta nome, perfil e senha para os valores de teste
+                u.nome, u.perfil, u.ativo = nome, perfil, True
+                u.senha_hash = gerar_hash(senha)
+                u.versao_sessao += 1
+                print(f"atualizado: {login} ({perfil})")
         db.commit()
     print("Usuários de teste prontos. As senhas estão em backend/app/cli.py (USUARIOS_DEMO).")
     return 0
