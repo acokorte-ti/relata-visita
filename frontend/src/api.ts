@@ -137,6 +137,12 @@ export const api = {
     pedir<Usuario>(`/api/usuarios/${id}`, json("PATCH", u)),
 };
 
+/** Iniciais para o avatar: só palavras com maiúscula ("Gerente de Vendas" -> "GV"). */
+export function iniciais(nome: string): string {
+  const palavras = nome.split(/\s+/).filter((p) => /^[A-ZÀ-Ý]/.test(p));
+  return (palavras.length ? palavras : [nome]).slice(0, 2).map((p) => p[0].toUpperCase()).join("");
+}
+
 // ------------------------------------------------ datas
 export function hojeISO(): string {
   const d = new Date();

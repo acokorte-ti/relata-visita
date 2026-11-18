@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Mic } from "lucide-react";
 import { api } from "./api";
+import { Logo } from "./marca";
 import { useSessao } from "./sessao";
 import { Aviso, Botao, Campo, Entrada } from "./ui";
 
@@ -25,30 +25,27 @@ export default function Login() {
   }
 
   return (
-    <main className="flex min-h-full items-center justify-center p-6">
-      <form onSubmit={entrar} className="w-full max-w-sm space-y-5 rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="flex size-14 items-center justify-center rounded-2xl bg-aco-700 text-white">
-            <Mic className="size-7" aria-hidden />
-          </span>
-          <div>
-            <h1 className="text-xl font-semibold">Relata Visita</h1>
-            <p className="text-sm text-slate-500">ACOKORTE · entre com seu usuário</p>
-          </div>
+    <main className="flex min-h-full flex-col bg-neutral-100 sm:items-center sm:justify-center sm:p-6">
+      <div className="flex w-full flex-1 flex-col overflow-hidden bg-white sm:max-w-sm sm:flex-none sm:rounded-2xl sm:shadow-sm sm:ring-1 sm:ring-neutral-200">
+        <div className="escovado flex h-60 flex-col items-center justify-center gap-4 [clip-path:polygon(0_0,100%_0,100%_82%,0_100%)]">
+          <Logo altura={36} />
+          <p className="font-titulo text-xs font-bold uppercase tracking-[0.18em] text-aco-500">Relata Visita</p>
         </div>
-        {erro && <Aviso>{erro}</Aviso>}
-        <Campo rotulo="Usuário">
-          <Entrada value={login} onChange={(e) => setLogin(e.target.value)} autoComplete="username"
-            autoCapitalize="none" autoCorrect="off" required autoFocus />
-        </Campo>
-        <Campo rotulo="Senha">
-          <Entrada type="password" value={senha} onChange={(e) => setSenha(e.target.value)}
-            autoComplete="current-password" required />
-        </Campo>
-        <Botao type="submit" variante="primario" carregando={enviando} className="w-full py-3 text-base">
-          Entrar
-        </Botao>
-      </form>
+        <form onSubmit={entrar} className="flex flex-1 flex-col gap-4 p-6 pt-2">
+          {erro && <Aviso>{erro}</Aviso>}
+          <Campo rotulo="Usuário">
+            <Entrada value={login} onChange={(e) => setLogin(e.target.value)} autoComplete="username"
+              autoCapitalize="none" autoCorrect="off" required autoFocus />
+          </Campo>
+          <Campo rotulo="Senha">
+            <Entrada type="password" value={senha} onChange={(e) => setSenha(e.target.value)}
+              autoComplete="current-password" required />
+          </Campo>
+          <Botao type="submit" variante="primario" carregando={enviando} className="mt-2 w-full">
+            Entrar
+          </Botao>
+        </form>
+      </div>
     </main>
   );
 }

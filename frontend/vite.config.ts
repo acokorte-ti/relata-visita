@@ -10,9 +10,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icone.svg"],
+      includeAssets: ["simbolo-acokorte.png", "apple-touch-icon.png"],
       manifest: {
-        name: "Relata Visita - ACOKORTE",
+        name: "Relata Visita - Açokorte",
         short_name: "Relata Visita",
         description: "Relato de visitas a clientes por voz",
         lang: "pt-BR",
@@ -21,11 +21,11 @@ export default defineConfig({
         display: "standalone",
         orientation: "portrait",
         background_color: "#ffffff",
-        theme_color: "#1F4E78",
+        theme_color: "#1B1C1E",
         icons: [
           { src: "/icone-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icone-512.png", sizes: "512x512", type: "image/png" },
-          { src: "/icone-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "/icone-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {

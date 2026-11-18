@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relata Visita · Protótipo B · Aço escuro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Raleway:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- identidade Açokorte (tirada de acokorte.com.br) ---------- */
+  :root {
+    --vermelho: #BE0A0F;
+    --vermelho-vivo: #E3262B;     /* vermelho para fundo escuro */
+    --vermelho-escuro: #8F070B;
+    --vermelho-claro: #FBEAEA;
+    --grafite: #3B3B3B;
+    --grafite-escuro: #222222;
+    --aco-900: #1B1C1E;
+    --aco-800: #2B2C2F;
+    --aco-700: #3A3C40;
+    --cinza-700: #515151;
+    --cinza-500: #8A8A8A;
+    --cinza-400: #A9AAAD;
+    --cinza-300: #E1E1E1;
+    --cinza-100: #F7F7F7;
+    --branco: #FFFFFF;
+    --alerta: #B45309;
+    --alerta-claro: #FEF3C7;
+
+    /* "aço escovado" do topo do site, feito só com CSS */
+    --escovado:
+      repeating-linear-gradient(115deg, rgba(255,255,255,.035) 0 2px, transparent 2px 5px),
+      repeating-linear-gradient(115deg, rgba(0,0,0,.18) 0 1px, transparent 1px 9px),
+      linear-gradient(115deg, #2E3034 0%, #4A4D52 38%, #2A2B2E 62%, #3D3F43 100%);
+
+    --titulo: "Raleway", system-ui, sans-serif;
+    --texto: "Open Sans", system-ui, sans-serif;
+
+    --r: 6px;
+    --r-card: 10px;
+    --e: 8px;
+    --alt-botao: 48px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 15px/1.55 var(--texto); color: var(--grafite); background: var(--cinza-100); }
+  h1, h2, h3 { font-family: var(--titulo); font-weight: 700; color: var(--grafite-escuro); }
+
+  /* símbolo = recorte do logo oficial (só a elipse com o K) */
+  .sim { --h: 30px; height: var(--h); width: calc(var(--h) * 1.42); flex: none; background: url(https://www.acokorte.com.br/wp-content/uploads/2021/08/logo-acokorte-positivo.png) left center / auto 100% no-repeat; }
+  .chip-logo { background: var(--branco); border-radius: var(--r); display: inline-flex; align-items: center; justify-content: center; }
+
+  /* ---------- página do protótipo ---------- */
+  .faixa { background: var(--escovado); color: var(--branco); padding: calc(var(--e)*4) calc(var(--e)*5); display: flex; align-items: center; gap: calc(var(--e)*3); }
+  .faixa .chip-logo { width: 72px; height: 52px; }
+  .faixa h1 { color: var(--branco); font-size: 24px; }
+  .faixa p { color: var(--cinza-400); font-size: 14px; }
+  .faixa .tag { margin-left: auto; background: var(--vermelho-vivo); padding: 6px 14px; border-radius: var(--r); font: 700 12px var(--titulo); letter-spacing: .08em; }
+  .secao { max-width: 1320px; margin: 0 auto; padding: calc(var(--e)*6) calc(var(--e)*5); }
+  .secao > h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--vermelho); margin-bottom: 4px; }
+  .secao > p { color: var(--cinza-700); margin-bottom: calc(var(--e)*4); }
+
+  .identidade { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--e)*2); }
+  .bloco { background: var(--branco); border-radius: var(--r-card); padding: calc(var(--e)*3); border: 1px solid var(--cinza-300); }
+  .bloco.escuro { background: var(--escovado); border-color: transparent; }
+  .bloco h3 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--cinza-700); margin-bottom: calc(var(--e)*2); }
+  .bloco.escuro h3 { color: var(--cinza-400); }
+  .cores { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--e); }
+  .cor { height: 56px; border-radius: var(--r); display: flex; align-items: flex-end; padding: 6px 8px; font: 600 11px var(--texto); }
+  .fonte-t { font: 800 30px/1.1 var(--titulo); color: var(--grafite-escuro); }
+  .fonte-c { font: 400 15px var(--texto); color: var(--cinza-700); margin-top: 6px; }
+  .amostra { display: flex; align-items: center; justify-content: center; height: 120px; }
+
+  /* ---------- celulares ---------- */
+  .celulares { display: grid; grid-template-columns: repeat(4, 300px); gap: calc(var(--e)*4); justify-content: center; }
+  .cel-legenda { text-align: center; font: 700 12px var(--titulo); letter-spacing: .1em; text-transform: uppercase; color: var(--cinza-700); margin-top: calc(var(--e)*2); }
+  .cel { width: 300px; height: 620px; background: var(--cinza-100); border-radius: 32px; border: 8px solid var(--aco-900); overflow: hidden; display: flex; flex-direction: column; }
+  .cel.escuro { background: var(--aco-900); }
+  .cel-topo { flex: none; background: var(--escovado); color: var(--branco); padding: calc(var(--e)*2); display: grid; grid-template-columns: 52px 1fr 32px; align-items: center; gap: 12px; }
+  .cel-topo .chip-logo { width: 52px; height: 40px; }
+  .cel-topo b { display: block; font: 700 14px var(--titulo); }
+  .cel-topo small { color: var(--cinza-400); font-size: 11px; }
+  .cel-topo .sair { width: 32px; height: 32px; border-radius: var(--r); background: rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; }
+  .cel-topo .sair svg { width: 16px; height: 16px; }
+  .faixa-num { background: var(--escovado); padding: 0 calc(var(--e)*2) calc(var(--e)*2); display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--e); }
+  .faixa-num div { background: rgba(255,255,255,.07); border-radius: var(--r); padding: 8px 10px; color: var(--branco); }
+  .faixa-num span { font-size: 10px; color: var(--cinza-400); display: block; }
+  .faixa-num b { font: 800 20px var(--titulo); }
+  .cel-corpo { flex: 1; padding: calc(var(--e)*2); display: flex; flex-direction: column; gap: calc(var(--e)*2); }
+
+  .titulo-acao { font: 800 13px var(--titulo); letter-spacing: .1em; text-transform: uppercase; color: var(--grafite-escuro); text-align: center; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tile { aspect-ratio: 1 / 1; border-radius: var(--r-card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 12px; font: 800 12px/1.3 var(--titulo); letter-spacing: .06em; text-transform: uppercase; }
+  .tile .ic { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .tile .ic svg { width: 26px; height: 26px; }
+  .tile.voz { background: var(--vermelho); color: var(--branco); }
+  .tile.voz .ic { background: rgba(255,255,255,.16); }
+  .tile.texto { background: var(--aco-800); color: var(--branco); }
+  .tile.texto .ic { background: rgba(255,255,255,.1); }
+  .rotulo { font: 700 11px var(--titulo); letter-spacing: .1em; text-transform: uppercase; color: var(--cinza-700); }
+  .lista { background: var(--branco); border-radius: var(--r); border: 1px solid var(--cinza-300); }
+  .lista div { height: 44px; display: grid; grid-template-columns: 6px 1fr auto; gap: 10px; align-items: center; padding: 0 12px; font-size: 13px; }
+  .lista div + div { border-top: 1px solid var(--cinza-300); }
+  .lista i { width: 6px; height: 6px; border-radius: 50%; background: var(--vermelho); }
+  .lista small { color: var(--cinza-500); font-size: 11px; }
+
+  .botao { height: var(--alt-botao); border-radius: var(--r); border: 0; font: 700 13px var(--titulo); letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: var(--e); width: 100%; }
+  .botao svg { width: 18px; height: 18px; }
+  .botao.primario { background: var(--vermelho); color: var(--branco); }
+  .botao.claro { background: rgba(255,255,255,.1); color: var(--branco); }
+  .botao.contorno { background: var(--branco); color: var(--grafite-escuro); box-shadow: inset 0 0 0 1px var(--cinza-300); }
+  .botao.fantasma { background: transparent; color: var(--cinza-700); }
+  .dupla-botao { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e); }
+
+  .campo label { display: block; font-size: 11px; font-weight: 600; color: var(--cinza-700); margin-bottom: 4px; }
+  .entrada { height: 40px; background: var(--branco); border: 1px solid var(--cinza-300); border-radius: var(--r); padding: 0 12px; display: flex; align-items: center; font-size: 13px; color: var(--grafite-escuro); }
+  .entrada.leitura { background: #EFEFEF; color: var(--cinza-500); }
+  .entrada.area { height: 88px; align-items: flex-start; padding-top: 9px; font-size: 12px; line-height: 1.45; }
+  .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e); }
+  .cartao-form { background: var(--branco); border-radius: var(--r-card); padding: 12px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--cinza-300); }
+
+  /* gravação em tela escura */
+  .gravacao { flex: 1; display: flex; flex-direction: column; padding: calc(var(--e)*2); gap: calc(var(--e)*2); color: var(--branco); }
+  .gravacao .instrucao { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: var(--r-card); padding: 12px 14px; font-size: 13px; line-height: 1.5; color: #D9D9D9; }
+  .gravacao .centro { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--e)*2); }
+  .relogio { font: 800 48px var(--titulo); font-variant-numeric: tabular-nums; }
+  .ondas { display: flex; gap: 4px; align-items: center; height: 48px; }
+  .ondas i { width: 5px; border-radius: 3px; background: var(--vermelho-vivo); }
+  .mic { width: 112px; height: 112px; border-radius: 50%; background: var(--vermelho-vivo); box-shadow: 0 0 0 10px rgba(227,38,43,.22), 0 0 0 22px rgba(227,38,43,.1); display: flex; align-items: center; justify-content: center; }
+  .mic span { width: 36px; height: 36px; border-radius: 6px; background: var(--branco); }
+
+  .login { flex: 1; display: flex; flex-direction: column; }
+  .login .topo { background: var(--escovado); height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: var(--branco); clip-path: polygon(0 0, 100% 0, 100% 82%, 0 100%); }
+  .login .topo .chip-logo { width: 200px; height: 64px; }
+  .login .topo .chip-logo img { height: 38px; }
+  .login .topo p { font: 700 12px var(--titulo); letter-spacing: .14em; text-transform: uppercase; color: var(--cinza-400); }
+  .login form { padding: calc(var(--e)*3); display: flex; flex-direction: column; gap: calc(var(--e)*2); }
+
+  /* ---------- painel ---------- */
+  .painel { border-radius: var(--r-card); overflow: hidden; border: 1px solid var(--cinza-300); background: var(--cinza-100); }
+  .barra-topo { background: var(--aco-900); height: 64px; display: grid; grid-template-columns: 240px 1fr 240px; align-items: center; padding: 0 calc(var(--e)*3); }
+  .barra-topo .chip-logo { width: 168px; height: 44px; }
+  .barra-topo .chip-logo img { height: 26px; }
+  .abas { display: flex; justify-content: center; gap: 4px; height: 100%; }
+  .aba { display: flex; align-items: center; gap: 8px; padding: 0 20px; color: var(--cinza-400); font: 700 13px var(--titulo); letter-spacing: .06em; text-transform: uppercase; border-bottom: 3px solid transparent; }
+  .aba svg { width: 16px; height: 16px; }
+  .aba.ativa { color: var(--branco); border-bottom-color: var(--vermelho-vivo); }
+  .usuario { justify-self: end; display: flex; align-items: center; gap: 10px; color: var(--branco); font-size: 13px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--vermelho-vivo); display: flex; align-items: center; justify-content: center; font: 800 12px var(--titulo); }
+
+  .hero { background: var(--escovado); padding: calc(var(--e)*4) calc(var(--e)*4) calc(var(--e)*5); display: flex; flex-direction: column; gap: calc(var(--e)*3); }
+  .hero-cabeca { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: calc(var(--e)*2); }
+  .hero h1 { color: var(--branco); font-size: 28px; }
+  .hero p { color: var(--cinza-400); font-size: 14px; }
+  .hero .botao { width: 180px; }
+  .filtros { display: grid; grid-template-columns: repeat(5, 1fr); gap: calc(var(--e)*2); }
+  .filtros label { color: var(--cinza-400); }
+  .filtros .entrada { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color: var(--branco); }
+  .segmentado { height: 40px; background: rgba(255,255,255,.08); border-radius: var(--r); padding: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .segmentado span { border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--cinza-400); }
+  .segmentado .on { background: var(--vermelho-vivo); color: var(--branco); }
+  .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: calc(var(--e)*2); }
+  .kpi { height: 120px; background: rgba(20,20,22,.45); border: 1px solid rgba(255,255,255,.1); border-radius: var(--r-card); padding: calc(var(--e)*2); display: flex; flex-direction: column; justify-content: space-between; }
+  .kpi span { font-size: 12px; line-height: 1.3; min-height: 2.6em; color: var(--cinza-400); }
+  .kpi b { font: 800 26px/1 var(--titulo); white-space: nowrap; color: var(--branco); font-variant-numeric: tabular-nums; }
+  .kpi small { font-size: 11px; color: var(--cinza-400); }
+  .kpi.destaque { background: var(--vermelho); border-color: var(--vermelho); }
+  .kpi.destaque span, .kpi.destaque small { color: #F6D0D1; }
+
+  .corpo-painel { padding: calc(var(--e)*4); display: flex; flex-direction: column; gap: calc(var(--e)*3); margin-top: calc(var(--e)*-2); }
+  .cartao { background: var(--branco); border: 1px solid var(--cinza-300); border-radius: var(--r-card); padding: calc(var(--e)*3); }
+  .cartao-cabeca { display: grid; grid-template-columns: 1fr auto; align-items: start; margin-bottom: calc(var(--e)*2); }
+  .cartao h3 { font-size: 16px; }
+  .cartao .sub { font-size: 12px; color: var(--cinza-500); }
+  .selo { font: 700 11px var(--titulo); letter-spacing: .08em; text-transform: uppercase; color: var(--cinza-500); background: var(--cinza-100); border-radius: 4px; padding: 4px 8px; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--e)*3); }
+
+  .colunas { height: 200px; display: grid; grid-template-columns: 32px 1fr; }
+  .eixo { display: flex; flex-direction: column-reverse; justify-content: space-between; font-size: 11px; color: var(--cinza-500); padding-right: 8px; text-align: right; }
+  .area-col { display: grid; grid-template-columns: repeat(13, 1fr); gap: 6px; align-items: end; border-bottom: 1px solid var(--cinza-300); background: repeating-linear-gradient(to top, var(--cinza-300) 0 1px, transparent 1px 25%); }
+  .area-col i { display: block; max-width: 24px; width: 100%; margin: 0 auto; background: var(--vermelho); border-radius: 4px 4px 0 0; }
+  .datas { display: grid; grid-template-columns: 32px repeat(13, 1fr); gap: 6px; font-size: 10px; color: var(--cinza-500); text-align: center; margin-top: 6px; }
+
+  .ranking { display: grid; grid-template-columns: 28px 1fr 32px; grid-template-rows: auto 6px; column-gap: 12px; row-gap: 6px; align-items: center; padding: 8px 0; }
+  .ranking + .ranking { border-top: 1px solid var(--cinza-100); }
+  .ranking .pos { grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; background: var(--cinza-300); display: flex; align-items: center; justify-content: center; font: 800 12px var(--titulo); color: var(--grafite); }
+  .cartao-cabeca + .ranking .pos { background: var(--vermelho); color: var(--branco); }
+  .ranking .nome { font-size: 13px; font-weight: 600; }
+  .ranking b { grid-row: span 2; text-align: right; font: 800 16px var(--titulo); font-variant-numeric: tabular-nums; }
+  .ranking .trilho { height: 6px; background: var(--cinza-100); border-radius: 3px; }
+  .ranking .trilho i { display: block; height: 100%; background: var(--vermelho); border-radius: 3px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font: 700 11px var(--titulo); letter-spacing: .08em; text-transform: uppercase; color: var(--cinza-500); padding: 0 0 10px; border-bottom: 1px solid var(--cinza-300); }
+  td { padding: 10px 0; border-bottom: 1px solid var(--cinza-100); height: 44px; }
+  .chip { display: inline-block; background: var(--cinza-100); border-radius: 4px; padding: 2px 8px; font-size: 11px; margin: 2px 4px 2px 0; }
+  .status { display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: 700; }
+  .status.critico { background: var(--vermelho-claro); color: var(--vermelho-escuro); }
+  .status.atencao { background: var(--alerta-claro); color: var(--alerta); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 1360px) { .celulares { grid-template-columns: repeat(2, 300px); } .kpis { grid-template-columns: repeat(3, 1fr); } .identidade { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-mic" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></g></symbol>
+    <symbol id="i-teclado" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h0M10 10h0M14 10h0M18 10h0M7 14h10"/></g></symbol>
+    <symbol id="i-graf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></g></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></g></symbol>
+    <symbol id="i-pessoas" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.5.5 4 2.7 4 6"/></g></symbol>
+    <symbol id="i-baixar" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></g></symbol>
+    <symbol id="i-sair" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/></g></symbol>
+    <symbol id="i-seta" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<header class="faixa">
+  <span class="chip-logo"><span class="sim" style="--h:36px"></span></span>
+  <div>
+    <h1>Relata Visita · Protótipo B</h1>
+    <p>Aço escuro: topo em aço escovado como no site, vermelho Açokorte como destaque e conteúdo em cartões claros.</p>
+  </div>
+  <span class="tag">PROTÓTIPO B</span>
+</header>
+
+<!-- ======================= IDENTIDADE ======================= -->
+<section class="secao">
+  <h2>Identidade aplicada</h2>
+  <p>Cores, fontes e logo extraídos de acokorte.com.br. O aço escovado do topo do site vira a textura das áreas escuras.</p>
+  <div class="identidade">
+    <div class="bloco">
+      <h3>Logo</h3>
+      <div class="amostra"><img src="https://www.acokorte.com.br/wp-content/uploads/2021/08/logo-acokorte-positivo.png" alt="Açokorte" style="height:44px"></div>
+    </div>
+    <div class="bloco escuro">
+      <h3>Logo no escuro</h3>
+      <div class="amostra"><span class="chip-logo" style="width:220px;height:72px"><img src="https://www.acokorte.com.br/wp-content/uploads/2021/08/logo-acokorte-positivo.png" alt="Açokorte" style="height:38px"></span></div>
+    </div>
+    <div class="bloco">
+      <h3>Cores</h3>
+      <div class="cores">
+        <div class="cor" style="background:#BE0A0F;color:#fff">#BE0A0F</div>
+        <div class="cor" style="background:#E3262B;color:#fff">#E3262B</div>
+        <div class="cor" style="background:#1B1C1E;color:#fff">#1B1C1E</div>
+        <div class="cor" style="background:#3A3C40;color:#fff">#3A3C40</div>
+        <div class="cor" style="background:#E1E1E1;color:#3B3B3B">#E1E1E1</div>
+        <div class="cor" style="background:#F7F7F7;color:#3B3B3B;border:1px solid #E1E1E1">#F7F7F7</div>
+      </div>
+    </div>
+    <div class="bloco">
+      <h3>Fontes</h3>
+      <div class="fonte-t">Raleway</div>
+      <div class="fonte-c">Títulos e botões, peso 700 a 800</div>
+      <div class="fonte-t" style="font-family:'Open Sans';font-weight:600;font-size:26px;margin-top:16px">Open Sans</div>
+      <div class="fonte-c">Textos, campos e tabelas</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= APP DO VENDEDOR ======================= -->
+<section class="secao" style="padding-top:0">
+  <h2>App do vendedor (celular)</h2>
+  <p>Os dois modos de relato viram dois quadrados iguais, lado a lado. A gravação usa tela escura, que dá menos reflexo na rua.</p>
+  <div class="celulares">
+
+    <!-- Login -->
+    <div>
+      <div class="cel">
+        <div class="login">
+          <div class="topo">
+            <span class="chip-logo"><img src="https://www.acokorte.com.br/wp-content/uploads/2021/08/logo-acokorte-positivo.png" alt="Açokorte"></span>
+            <p>Relata Visita</p>
+          </div>
+          <form>
+            <div class="campo"><label>Usuário</label><div class="entrada">carlos.souza</div></div>
+            <div class="campo"><label>Senha</label><div class="entrada">••••••••••</div></div>
+            <div class="botao primario">Entrar</div>
+          </form>
+        </div>
+      </div>
+      <div class="cel-legenda">1 · Login</div>
+    </div>
+
+    <!-- Início -->
+    <div>
+      <div class="cel">
+        <div class="cel-topo">
+          <span class="chip-logo"><span class="sim" style="--h:26px"></span></span>
+          <div><b>Olá, Carlos</b><small>Vendedor externo</small></div>
+          <span class="sair"><svg><use href="#i-sair"/></svg></span>
+        </div>
+        <div class="faixa-num">
+          <div><span>Hoje</span><b>1</b></div>
+          <div><span>Semana</span><b>4</b></div>
+          <div><span>Mês</span><b>17</b></div>
+        </div>
+        <div class="cel-corpo">
+          <span class="titulo-acao">Iniciar relato de visita</span>
+          <div class="tiles">
+            <div class="tile voz"><span class="ic"><svg><use href="#i-mic"/></svg></span>Por voz</div>
+            <div class="tile texto"><span class="ic"><svg><use href="#i-teclado"/></svg></span>Por texto</div>
+          </div>
+          <span class="rotulo">Últimos envios</span>
+          <div class="lista">
+            <div><i></i><span><b>Gerdau</b> · Ouro Branco</span><small>18/11</small></div>
+            <div><i></i><span><b>Usiminas</b> · Ipatinga</span><small>17/11</small></div>
+            <div><i></i><span><b>Aperam</b> · Timóteo</span><small>14/11</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="cel-legenda">2 · Início</div>
+    </div>
+
+    <!-- Gravando -->
+    <div>
+      <div class="cel escuro">
+        <div class="cel-topo">
+          <span class="chip-logo"><span class="sim" style="--h:26px"></span></span>
+          <div><b>Relato por voz</b><small>Gravando…</small></div>
+          <span class="sair"><svg><use href="#i-sair"/></svg></span>
+        </div>
+        <div class="gravacao">
+          <div class="instrucao">Relate qual cliente foi visitado, a cidade, quem foi o contato com quem você conversou e qual o assunto tratado.</div>
+          <div class="centro">
+            <div class="relogio">01:24</div>
+            <div class="ondas">
+              <i style="height:30%"></i><i style="height:60%"></i><i style="height:85%"></i><i style="height:45%"></i><i style="height:100%"></i><i style="height:70%"></i><i style="height:35%"></i><i style="height:80%"></i><i style="height:55%"></i><i style="height:25%"></i><i style="height:65%"></i><i style="height:40%"></i>
+            </div>
+            <div class="mic"><span></span></div>
+            <span style="font-size:13px;color:var(--cinza-400)">Toque para terminar</span>
+          </div>
+          <div class="dupla-botao">
+            <div class="botao claro">Cancelar</div>
+            <div class="botao claro">Enviar áudio</div>
+          </div>
+        </div>
+      </div>
+      <div class="cel-legenda">3 · Gravando</div>
+    </div>
+
+    <!-- Conferir -->
+    <div>
+      <div class="cel">
+        <div class="cel-topo">
+          <span class="chip-logo"><span class="sim" style="--h:26px"></span></span>
+          <div><b>Confira o relatório</b><small>Toque para corrigir</small></div>
+          <span class="sair"><svg><use href="#i-sair"/></svg></span>
+        </div>
+        <div class="cel-corpo" style="gap:12px">
+          <div class="cartao-form">
+            <div class="dupla">
+              <div class="campo"><label>Vendedor</label><div class="entrada leitura">Carlos Souza</div></div>
+              <div class="campo"><label>Data</label><div class="entrada">18/11/2026</div></div>
+            </div>
+            <div class="dupla">
+              <div class="campo"><label>Cliente</label><div class="entrada">Gerdau</div></div>
+              <div class="campo"><label>Cidade</label><div class="entrada">Ouro Branco</div></div>
+            </div>
+            <div class="campo"><label>Contato</label><div class="entrada">Alex (Compras)</div></div>
+            <div class="campo"><label>Ata de reunião</label><div class="entrada area">Reclamou de 2 dias de atraso na entrega das facas da linha de tiras. Pediu cotação de 12 lâminas de tesoura rotativa.</div></div>
+          </div>
+          <div style="margin-top:auto" class="dupla-botao">
+            <div class="botao contorno">Descartar</div>
+            <div class="botao primario">Enviar <svg><use href="#i-seta"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <div class="cel-legenda">4 · Conferir e enviar</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================= PAINEL DO GERENTE ======================= -->
+<section class="secao" style="padding-top:0">
+  <h2>Painel do gerente (web)</h2>
+  <p>Menu no topo, que libera a largura toda para os dados. Os indicadores ficam na faixa de aço e os cartões, em duas colunas iguais.</p>
+  <div class="painel">
+    <div class="barra-topo">
+      <span class="chip-logo"><img src="https://www.acokorte.com.br/wp-content/uploads/2021/08/logo-acokorte-positivo.png" alt="Açokorte"></span>
+      <nav class="abas">
+        <span class="aba ativa"><svg><use href="#i-graf"/></svg>Dashboard</span>
+        <span class="aba"><svg><use href="#i-doc"/></svg>Relatórios</span>
+        <span class="aba"><svg><use href="#i-pessoas"/></svg>Vendedores</span>
+      </nav>
+      <div class="usuario"><span>Gerente de Vendas</span><span class="avatar">GV</span></div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-cabeca">
+        <div><h1>Dashboard de visitas</h1><p>Quem está visitando, quais clientes e com que frequência.</p></div>
+        <div class="botao primario"><svg><use href="#i-baixar"/></svg>Exportar Excel</div>
+      </div>
+      <div class="filtros">
+        <div class="campo"><label>Período</label><div class="segmentado"><span>30 dias</span><span class="on">90 dias</span><span>Ano</span></div></div>
+        <div class="campo"><label>De</label><div class="entrada">21/08/2026</div></div>
+        <div class="campo"><label>Até</label><div class="entrada">18/11/2026</div></div>
+        <div class="campo"><label>Vendedor</label><div class="entrada">Todos</div></div>
+        <div class="campo"><label>Cliente</label><div class="entrada" style="color:var(--cinza-400)">Buscar cliente</div></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi destaque"><span>Visitas no período</span><b>148</b><small>121 voz · 27 texto</small></div>
+        <div class="kpi"><span>Clientes visitados</span><b>63</b><small>12 novos</small></div>
+        <div class="kpi"><span>Vendedores visitando</span><b>9 de 10</b><small>1 sem visita</small></div>
+        <div class="kpi"><span>Média por vendedor</span><b>16,4</b><small>visitas no período</small></div>
+        <div class="kpi"><span>Média por semana</span><b>11,5</b><small>visitas da equipe</small></div>
+        <div class="kpi"><span>Sem visita há 30+ dias</span><b>14</b><small>clientes</small></div>
+      </div>
+    </div>
+
+    <div class="corpo-painel">
+      <div class="cartao">
+        <div class="cartao-cabeca">
+          <div><h3>Visitas por semana</h3><p class="sub">Total da equipe em cada semana</p></div>
+          <span class="selo">13 semanas</span>
+        </div>
+        <div class="colunas">
+          <div class="eixo"><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span></div>
+          <div class="area-col">
+            <i style="height:40%"></i><i style="height:55%"></i><i style="height:45%"></i><i style="height:60%"></i><i style="height:35%"></i><i style="height:50%"></i><i style="height:70%"></i><i style="height:65%"></i><i style="height:55%"></i><i style="height:75%"></i><i style="height:60%"></i><i style="height:80%"></i><i style="height:90%"></i>
+          </div>
+        </div>
+        <div class="datas"><span></span><span>25/08</span><span>01/09</span><span>08/09</span><span>15/09</span><span>22/09</span><span>29/09</span><span>06/10</span><span>13/10</span><span>20/10</span><span>27/10</span><span>03/11</span><span>10/11</span><span>17/11</span></div>
+      </div>
+
+      <div class="duas">
+        <div class="cartao">
+          <div class="cartao-cabeca"><div><h3>Quem visitou mais</h3><p class="sub">Ranking de vendedores no período</p></div><span class="selo">Vendedores</span></div>
+          <div class="ranking"><span class="pos">1</span><span class="nome">Carlos Souza</span><b>27</b><span class="trilho"><i style="width:100%"></i></span></div>
+          <div class="ranking"><span class="pos">2</span><span class="nome">Marina Alves</span><b>23</b><span class="trilho"><i style="width:85%"></i></span></div>
+          <div class="ranking"><span class="pos">3</span><span class="nome">João Pereira</span><b>19</b><span class="trilho"><i style="width:70%"></i></span></div>
+          <div class="ranking"><span class="pos">4</span><span class="nome">Ana Lima</span><b>16</b><span class="trilho"><i style="width:59%"></i></span></div>
+          <div class="ranking"><span class="pos">5</span><span class="nome">Paulo Rocha</span><b>0</b><span class="trilho"><i style="width:0"></i></span></div>
+        </div>
+        <div class="cartao">
+          <div class="cartao-cabeca"><div><h3>Clientes mais visitados</h3><p class="sub">Ranking de clientes no período</p></div><span class="selo">Clientes</span></div>
+          <div class="ranking"><span class="pos">1</span><span class="nome">Gerdau</span><b>14</b><span class="trilho"><i style="width:100%"></i></span></div>
+          <div class="ranking"><span class="pos">2</span><span class="nome">ArcelorMittal</span><b>11</b><span class="trilho"><i style="width:79%"></i></span></div>
+          <div class="ranking"><span class="pos">3</span><span class="nome">Suzano</span><b>9</b><span class="trilho"><i style="width:64%"></i></span></div>
+          <div class="ranking"><span class="pos">4</span><span class="nome">Usiminas</span><b>8</b><span class="trilho"><i style="width:57%"></i></span></div>
+          <div class="ranking"><span class="pos">5</span><span class="nome">Berneck</span><b>6</b><span class="trilho"><i style="width:43%"></i></span></div>
+        </div>
+      </div>
+
+      <div class="duas">
+        <div class="cartao">
+          <div class="cartao-cabeca"><div><h3>Quem visitou cada cliente</h3><p class="sub">Vendedores e visitas por cliente</p></div><span class="selo">Cobertura</span></div>
+          <table>
+            <tr><th>Cliente</th><th>Vendedores</th><th class="num">Visitas</th></tr>
+            <tr><td><b>Gerdau</b></td><td><span class="chip">Carlos · 9</span><span class="chip">Marina · 5</span></td><td class="num">14</td></tr>
+            <tr><td><b>ArcelorMittal</b></td><td><span class="chip">João · 11</span></td><td class="num">11</td></tr>
+            <tr><td><b>Suzano</b></td><td><span class="chip">Ana · 6</span><span class="chip">Carlos · 3</span></td><td class="num">9</td></tr>
+            <tr><td><b>Usiminas</b></td><td><span class="chip">Marina · 8</span></td><td class="num">8</td></tr>
+          </table>
+        </div>
+        <div class="cartao">
+          <div class="cartao-cabeca"><div><h3>Clientes sem visita há 30+ dias</h3><p class="sub">Pela última visita registrada</p></div><span class="selo">Alerta</span></div>
+          <table>
+            <tr><th>Cliente</th><th>Última</th><th>Situação</th></tr>
+            <tr><td><b>Caldeiraria Norte</b></td><td>13/09/2026</td><td><span class="status critico">● 66 dias · crítico</span></td></tr>
+            <tr><td><b>Fiat Peças</b></td><td>09/10/2026</td><td><span class="status atencao">▲ 40 dias · atenção</span></td></tr>
+            <tr><td><b>Vale Estruturas</b></td><td>16/10/2026</td><td><span class="status atencao">▲ 33 dias · atenção</span></td></tr>
+            <tr><td><b>Comprex</b></td><td>17/10/2026</td><td><span class="status atencao">▲ 32 dias · atenção</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

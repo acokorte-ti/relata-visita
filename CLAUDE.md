@@ -4,11 +4,11 @@ Contexto do projeto para o Claude Code. Leia este arquivo inteiro antes de mexer
 
 ## 1. O que é e por que existe
 
-**Relata Visita** é um app interno da **ACOKORTE** (empresa de aço: chapas, corte, dobra; ERP Mega sobre Oracle).
+**Relata Visita** é um app interno da **ACOKORTE** (empresa brasileira de soluções em corte e desgaste: facas, lâminas, tesouras e peças de desgaste para siderurgia, papel e celulose, sucata, madeira, borracha, plástico, óleo e gás; aço especial AK, bimetálico, sinterizado e metal duro; serviços de recondicionamento; ERP Mega sobre Oracle). Site: https://www.acokorte.com.br/
 
 **Problema:** os vendedores externos visitam clientes e deveriam preencher uma planilha de visitas, mas não preenchem. É trabalhoso demais e o gerente de vendas fica sem saber o que foi tratado.
 
-**Solução:** depois da visita, o vendedor abre o app no celular e **fala** um resumo, por exemplo: *"Hoje visitei a Gerdau em Ouro Branco, falei com o Alex de compras, ele reclamou do atraso da última entrega e pediu cotação de 20 t de chapa grossa. Fico de mandar a proposta sexta."*
+**Solução:** depois da visita, o vendedor abre o app no celular e **fala** um resumo, por exemplo: *"Hoje visitei a Gerdau em Ouro Branco, falei com o Alex de compras, ele reclamou do atraso da última entrega e pediu cotação de 12 lâminas de tesoura rotativa. Fico de mandar a proposta sexta."*
 
 Fluxo do vendedor (app mobile, PWA):
 
@@ -136,6 +136,18 @@ Usuários de teste do modo demo: lista `USUARIOS_DEMO` em `backend/app/cli.py` (
 
 **Frontend:** `AppVendedor.tsx` controla as etapas (início → gravar/processando ou escrever → formulário → enviado). O rascunho fica no `localStorage` até ser enviado, então não se perde se o app fechar ou cair a internet. `gravador.ts` usa `MediaRecorder` (webm/opus no Android, mp4 no iPhone), com limite de 10 min e barras de nível do microfone. Tem também "Enviar áudio" para arquivos do WhatsApp. `Dashboard.tsx` desenha os gráficos em HTML/CSS puro (sem biblioteca): série única na cor `#2a78d6` (validada no guia de dataviz), barras finas com valor na ponta e dica ao passar o mouse.
 
+## 5.1 Identidade visual (protótipo B "Aço escuro", aprovado em 18/11/2026)
+
+Referência: `docs/prototipos/prototipo-b-aco-escuro.html` (o A, "Industrial claro", ficou só como alternativa).
+
+- **Cores** (tokens Tailwind em `frontend/src/index.css`): vermelho `marca-700` `#BE0A0F` (botões, destaque, série dos gráficos), `marca-600` `#E3262B` (vermelho do logo, sobre fundo escuro), `marca-800`, `marca-50/100`; aço `aco-900` `#1B1C1E`, `aco-800`, `aco-700`, `aco-500` (texto secundário no escuro); `grafite` `#3B3B3B`. Fundo da página `neutral-100`.
+- **Fontes:** Raleway 700/800 (`font-titulo`) em títulos, botões e rótulos em maiúsculas; Open Sans no texto. Carregadas do Google Fonts no `index.html`.
+- **Textura:** classe `.escovado` (aço escovado do topo do site, só CSS) nos topos, faixas do painel, cabeçalhos de modal e detalhe.
+- **Logo:** símbolo enviado pela empresa em `frontend/public/simbolo-acokorte.png` (recortado, fundo transparente). `frontend/src/marca.tsx` tem `Simbolo` e `Logo` (símbolo + "AçoKorte" em Raleway com versaletes), sempre num chip branco. Ícones da PWA (`icone-192.png`, `icone-512.png`, `icone-maskable-512.png`, `apple-touch-icon.png`) foram gerados a partir do mesmo símbolo. Se o marketing mandar o vetorial (SVG), trocar o PNG e regenerar os ícones.
+- **Simetria:** botão `h-12` (48 px), campo `h-11` (44 px), raio `rounded-md`, cartões `rounded-xl`, espaçamentos múltiplos de 8 px, colunas sempre iguais (`grid-cols-2`/`-3`/`-6`), indicadores com 120 px de altura. Componentes prontos em `ui.tsx`: `Botao` (primario, secundario, claro, fantasma), `Campo`, `Entrada`, `AreaTexto`, `estiloEntradaEscura`, `Modal`, `Cartao`, `Faixa`.
+- **Vendedor:** topo escovado com símbolo, saudação e números (hoje, semana, mês); "Iniciar relato de visita" com dois quadrados iguais (Por voz vermelho, Por texto aço); gravação em tela escura.
+- **Painel:** barra superior `aco-900` com abas (ativa sublinhada em vermelho) e avatar; cada página começa com `Faixa` escovada (título, ação, filtros e indicadores) e cartões brancos logo abaixo.
+
 ## 6. Estado atual (18/11/2026)
 
 **Feito:**
@@ -145,6 +157,7 @@ Usuários de teste do modo demo: lista `USUARIOS_DEMO` em `backend/app/cli.py` (
 - [x] `teste_ambiente.py`, `iniciar.bat`, `PASSO_A_PASSO.md` e README atualizados.
 - [x] Relato por texto (botão próprio) e aba Dashboard do gerente, testados no navegador. 13 testes `pytest` passando.
 - [x] Gravação pelo microfone testada pelo usuário no Chrome em `localhost` (18/11).
+- [x] Identidade visual da Açokorte aplicada (protótipo B) no app e no painel.
 
 **Pendente:**
 

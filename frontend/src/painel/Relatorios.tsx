@@ -1,8 +1,9 @@
+// Aba Relatórios do gerente: todos os relatos com filtros, detalhe e exportação.
 import { useDeferredValue, useState, type ReactNode } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Download, Search, X } from "lucide-react";
+import { Download, Keyboard, Mic, Search, X } from "lucide-react";
 import { api, dataBR, dataHoraBR, hojeISO, isoDe, type FiltrosRelatos, type Relato } from "../api";
-import { Aviso, Carregando, Entrada } from "../ui";
+import { Aviso, Carregando, Faixa, estiloEntradaEscura } from "../ui";
 
 function primeiroDiaDoMes(): string {
   const d = new Date();
@@ -34,99 +35,100 @@ export default function Relatorios() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Relatórios de visita</h1>
-          <p className="text-sm text-slate-500">Tudo o que os vendedores enviaram pelo app.</p>
-        </div>
-        <a href={api.urlExcel(filtros)} download
-          className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-slate-800 ring-1 ring-slate-300 hover:bg-slate-50">
-          <Download className="size-4" aria-hidden /> Exportar Excel
-        </a>
-      </div>
-
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Metrica rotulo="Relatos no período" valor={lista.data?.total} />
-        <Metrica rotulo="Clientes visitados" valor={lista.data?.clientes} />
-        <Metrica rotulo="Vendedores com relato" valor={lista.data?.vendedores} />
-      </div>
-
-      <div className="mb-4 grid grid-cols-2 gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-200 md:grid-cols-3 2xl:grid-cols-[repeat(2,minmax(10rem,auto))_repeat(2,minmax(0,1fr))_minmax(0,1.4fr)_auto]">
-        <Filtro rotulo="De"><Entrada type="date" value={inicio} max={fim || undefined} onChange={(e) => setInicio(e.target.value)} /></Filtro>
-        <Filtro rotulo="Até"><Entrada type="date" value={fim} min={inicio || undefined} onChange={(e) => setFim(e.target.value)} /></Filtro>
-        <Filtro rotulo="Vendedor">
-          <select value={vendedorId} onChange={(e) => setVendedorId(e.target.value ? Number(e.target.value) : "")}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base focus:border-aco-600 focus:outline-none focus:ring-2 focus:ring-aco-100">
-            <option value="">Todos</option>
-            {vendedores.map((v) => <option key={v.id} value={v.id}>{v.nome}{v.ativo ? "" : " (inativo)"}</option>)}
-          </select>
-        </Filtro>
-        <Filtro rotulo="Cliente"><Entrada value={cliente} onChange={(e) => setCliente(e.target.value)} placeholder="Gerdau" /></Filtro>
-        <Filtro rotulo="Buscar na ata">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden />
-            <Entrada value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="chapa grossa" className="pl-9" />
-          </div>
-        </Filtro>
-        <div className="col-span-2 flex items-end md:col-span-1">
-          <button onClick={limpar} className="rounded-lg px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-100">Limpar</button>
-        </div>
-      </div>
-
-      {lista.isError && <Aviso>{(lista.error as Error).message}</Aviso>}
-      {lista.isPending ? <Carregando /> : lista.data && (
-        <div className="overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
-          {lista.data.itens.length === 0 ? (
-            <p className="p-10 text-center text-sm text-slate-500">Nenhum relato encontrado com esses filtros.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Data</th>
-                    <th className="px-4 py-3 font-medium">Vendedor</th>
-                    <th className="px-4 py-3 font-medium">Cliente</th>
-                    <th className="px-4 py-3 font-medium">Cidade</th>
-                    <th className="px-4 py-3 font-medium">Contato</th>
-                    <th className="hidden px-4 py-3 font-medium xl:table-cell">Ata</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {lista.data.itens.map((r) => (
-                    <tr key={r.id} onClick={() => setAberto(r)} tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && setAberto(r)}
-                      className="cursor-pointer hover:bg-aco-50/60 focus:bg-aco-50 focus:outline-none">
-                      <td className="whitespace-nowrap px-4 py-3 tabular-nums">{dataBR(r.data)}</td>
-                      <td className="whitespace-nowrap px-4 py-3">{r.vendedor_nome}</td>
-                      <td className="px-4 py-3 font-medium">{r.cliente}</td>
-                      <td className="px-4 py-3">{r.cidade}</td>
-                      <td className="px-4 py-3">{r.contato}</td>
-                      <td className="hidden max-w-md truncate px-4 py-3 text-slate-500 xl:table-cell">{r.ata}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+    <>
+      <Faixa titulo="Relatórios de visita" subtitulo="Tudo o que os vendedores enviaram pelo app."
+        acao={
+          <a href={api.urlExcel(filtros)} download
+            className="inline-flex h-12 items-center gap-2 rounded-md bg-marca-700 px-5 font-titulo text-[13px] font-bold uppercase tracking-wider text-white hover:bg-marca-800">
+            <Download className="size-4" aria-hidden /> Exportar Excel
+          </a>
+        }>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <Filtro rotulo="De"><input type="date" value={inicio} max={fim || undefined} onChange={(e) => setInicio(e.target.value)} className={estiloEntradaEscura} /></Filtro>
+          <Filtro rotulo="Até"><input type="date" value={fim} min={inicio || undefined} onChange={(e) => setFim(e.target.value)} className={estiloEntradaEscura} /></Filtro>
+          <Filtro rotulo="Vendedor">
+            <select value={vendedorId} onChange={(e) => setVendedorId(e.target.value ? Number(e.target.value) : "")} className={estiloEntradaEscura}>
+              <option value="">Todos</option>
+              {vendedores.map((v) => <option key={v.id} value={v.id}>{v.nome}{v.ativo ? "" : " (inativo)"}</option>)}
+            </select>
+          </Filtro>
+          <Filtro rotulo="Cliente"><input value={cliente} onChange={(e) => setCliente(e.target.value)} placeholder="Gerdau" className={estiloEntradaEscura} /></Filtro>
+          <Filtro rotulo="Buscar na ata">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-aco-500" aria-hidden />
+              <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="tesoura rotativa" className={`${estiloEntradaEscura} pl-9`} />
             </div>
-          )}
-          {lista.data.total > lista.data.itens.length && (
-            <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">
-              Mostrando os {lista.data.itens.length} mais recentes de {lista.data.total}. Use os filtros ou exporte o Excel para ver todos.
-            </p>
-          )}
+          </Filtro>
+          <Filtro rotulo={" "}>
+            <button onClick={limpar} className="h-11 w-full rounded-md bg-white/10 font-titulo text-[13px] font-bold uppercase tracking-wider text-white hover:bg-white/15">Limpar</button>
+          </Filtro>
         </div>
-      )}
+        <div className="grid grid-cols-3 gap-4">
+          <Metrica destaque rotulo="Relatos no período" valor={lista.data?.total} />
+          <Metrica rotulo="Clientes visitados" valor={lista.data?.clientes} />
+          <Metrica rotulo="Vendedores com relato" valor={lista.data?.vendedores} />
+        </div>
+      </Faixa>
+
+      <div className="mx-auto -mt-4 max-w-7xl px-4 pb-10 md:px-8">
+        {lista.isError && <Aviso>{(lista.error as Error).message}</Aviso>}
+        {lista.isPending ? <Carregando /> : lista.data && (
+          <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+            {lista.data.itens.length === 0 ? (
+              <p className="p-10 text-center text-sm text-neutral-500">Nenhum relato encontrado com esses filtros.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-neutral-50">
+                    <tr className="font-titulo text-[11px] uppercase tracking-wider text-neutral-500">
+                      <th className="px-4 py-3 font-bold">Data</th>
+                      <th className="px-4 py-3 font-bold">Vendedor</th>
+                      <th className="px-4 py-3 font-bold">Cliente</th>
+                      <th className="px-4 py-3 font-bold">Cidade</th>
+                      <th className="px-4 py-3 font-bold">Contato</th>
+                      <th className="hidden px-4 py-3 font-bold xl:table-cell">Ata</th>
+                      <th className="w-10 px-4 py-3 font-bold" aria-label="Origem" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100">
+                    {lista.data.itens.map((r) => (
+                      <tr key={r.id} onClick={() => setAberto(r)} tabIndex={0}
+                        onKeyDown={(e) => e.key === "Enter" && setAberto(r)}
+                        className="h-12 cursor-pointer hover:bg-marca-50/60 focus:bg-marca-50 focus:outline-none">
+                        <td className="whitespace-nowrap px-4 tabular-nums">{dataBR(r.data)}</td>
+                        <td className="whitespace-nowrap px-4">{r.vendedor_nome}</td>
+                        <td className="px-4 font-semibold">{r.cliente}</td>
+                        <td className="px-4">{r.cidade}</td>
+                        <td className="px-4">{r.contato}</td>
+                        <td className="hidden max-w-md truncate px-4 text-neutral-500 xl:table-cell">{r.ata}</td>
+                        <td className="px-4 text-neutral-400" title={r.origem === "texto" ? "Relato por texto" : "Relato por voz"}>
+                          {r.origem === "texto" ? <Keyboard className="size-4" aria-label="Texto" /> : <Mic className="size-4" aria-label="Voz" />}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {lista.data.total > lista.data.itens.length && (
+              <p className="border-t border-neutral-100 px-4 py-3 text-xs text-neutral-500">
+                Mostrando os {lista.data.itens.length} mais recentes de {lista.data.total}. Use os filtros ou exporte o Excel para ver todos.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       {aberto && <Detalhe relato={aberto} aoFechar={() => setAberto(null)} />}
-    </div>
+    </>
   );
 }
 
-function Metrica({ rotulo, valor }: { rotulo: string; valor?: number }) {
+function Metrica({ rotulo, valor, destaque }: { rotulo: string; valor?: number; destaque?: boolean }) {
   return (
-    <div className="rounded-xl bg-white px-4 py-3 ring-1 ring-slate-200">
-      <p className="text-xs text-slate-500">{rotulo}</p>
-      <p className="text-2xl font-semibold tabular-nums">{valor ?? "–"}</p>
+    <div className={`flex h-24 flex-col justify-between rounded-xl border p-4 ${destaque ? "border-marca-700 bg-marca-700" : "border-white/10 bg-black/30"}`}>
+      <p className={`text-xs ${destaque ? "text-marca-100" : "text-aco-500"}`}>{rotulo}</p>
+      <p className="font-titulo text-[26px] font-extrabold leading-none tabular-nums text-white">{valor ?? "–"}</p>
     </div>
   );
 }
@@ -134,7 +136,7 @@ function Metrica({ rotulo, valor }: { rotulo: string; valor?: number }) {
 function Filtro({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   return (
     <label className="block min-w-0">
-      <span className="mb-1 block text-xs font-medium text-slate-500">{rotulo}</span>
+      <span className="mb-1 block text-xs font-semibold text-aco-500">{rotulo}</span>
       {children}
     </label>
   );
@@ -142,16 +144,16 @@ function Filtro({ rotulo, children }: { rotulo: string; children: ReactNode }) {
 
 function Detalhe({ relato: r, aoFechar }: { relato: Relato; aoFechar: () => void }) {
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-slate-900/40" onClick={aoFechar}>
+    <div className="fixed inset-0 z-40 flex justify-end bg-aco-900/50" onClick={aoFechar}>
       <aside role="dialog" aria-modal="true" aria-label={`Relato ${r.cliente}`}
         className="flex h-full w-full max-w-xl flex-col overflow-y-auto bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 flex items-start justify-between gap-4 border-b border-slate-100 bg-white px-6 py-5">
+        <div className="escovado sticky top-0 flex items-start justify-between gap-4 px-6 py-5">
           <div>
-            <h2 className="text-xl font-semibold">{r.cliente}</h2>
-            <p className="text-sm text-slate-500">{[r.cidade, dataBR(r.data)].filter(Boolean).join(" · ")}</p>
+            <h2 className="text-xl text-white">{r.cliente}</h2>
+            <p className="text-sm text-aco-500">{[r.cidade, dataBR(r.data)].filter(Boolean).join(" · ")}</p>
           </div>
-          <button onClick={aoFechar} className="rounded p-1 text-slate-500 hover:bg-slate-100" aria-label="Fechar">
-            <X className="size-5" />
+          <button onClick={aoFechar} className="flex size-9 items-center justify-center rounded-md bg-white/10 hover:bg-white/20" aria-label="Fechar">
+            <X className="size-4" />
           </button>
         </div>
         <div className="space-y-6 px-6 py-5">
@@ -159,22 +161,16 @@ function Detalhe({ relato: r, aoFechar }: { relato: Relato; aoFechar: () => void
             <Item rotulo="Vendedor" valor={r.vendedor_nome} />
             <Item rotulo="Contato" valor={r.contato || "–"} />
             <Item rotulo="Registrado em" valor={dataHoraBR(r.criado_em)} />
+            <Item rotulo="Origem" valor={r.origem === "texto" ? "Texto" : "Voz"} />
           </dl>
-          <section>
-            <h3 className="mb-2 text-sm font-medium text-slate-500">Ata de reunião</h3>
-            <p className="whitespace-pre-wrap leading-relaxed">{r.ata || "–"}</p>
-          </section>
+          <Bloco titulo="Ata de reunião"><p className="whitespace-pre-wrap leading-relaxed">{r.ata || "–"}</p></Bloco>
           {r.tem_audio && (
-            <section>
-              <h3 className="mb-2 text-sm font-medium text-slate-500">Áudio original</h3>
-              <audio controls preload="none" src={api.urlAudio(r.id)} className="w-full" />
-            </section>
+            <Bloco titulo="Áudio original"><audio controls preload="none" src={api.urlAudio(r.id)} className="w-full" /></Bloco>
           )}
           {r.transcricao && (
-            <section>
-              <h3 className="mb-2 text-sm font-medium text-slate-500">Transcrição</h3>
-              <p className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">{r.transcricao}</p>
-            </section>
+            <Bloco titulo={r.origem === "texto" ? "Texto digitado" : "Transcrição"}>
+              <p className="whitespace-pre-wrap rounded-md bg-neutral-100 p-4 text-sm leading-relaxed text-neutral-700">{r.transcricao}</p>
+            </Bloco>
           )}
         </div>
       </aside>
@@ -182,11 +178,20 @@ function Detalhe({ relato: r, aoFechar }: { relato: Relato; aoFechar: () => void
   );
 }
 
+function Bloco({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <section>
+      <h3 className="mb-2 font-titulo text-[11px] font-bold uppercase tracking-wider text-marca-700">{titulo}</h3>
+      {children}
+    </section>
+  );
+}
+
 function Item({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
     <div>
-      <dt className="text-xs text-slate-500">{rotulo}</dt>
-      <dd className="font-medium">{valor}</dd>
+      <dt className="text-xs text-neutral-500">{rotulo}</dt>
+      <dd className="font-semibold">{valor}</dd>
     </div>
   );
 }

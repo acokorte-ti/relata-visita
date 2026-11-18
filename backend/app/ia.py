@@ -9,8 +9,8 @@ CAMPOS_IA = ("cliente", "cidade", "contato", "ata")
 
 _TEXTO_DEMO = (
     "Hoje visitei a Gerdau em Ouro Branco, conversei com o Alex do setor de compras. "
-    "Ele reclamou de dois dias de atraso na entrega das chapas do último pedido e pediu "
-    "cotação de 20 toneladas de chapa grossa para dezembro. Fiquei de mandar a proposta "
+    "Ele reclamou de dois dias de atraso na entrega das facas da linha de tiras e pediu "
+    "cotação de doze lâminas de tesoura rotativa para dezembro. Fiquei de mandar a proposta "
     "até sexta e voltar lá na semana que vem."
 )
 
@@ -28,11 +28,13 @@ def transcrever(nome_arquivo: str, dados: bytes) -> str:
     r = _cliente().audio.transcriptions.create(
         model=config.TRANSCRIBE_MODEL, file=(nome_arquivo, dados), language="pt",
         prompt="Relato de visita comercial de vendedor externo da ACOKORTE "
-               "(aço, chapas, corte, dobra). Nomes de clientes, cidades e pessoas.")
+               "(facas, lâminas, tesouras e peças de desgaste para siderurgia, papel e celulose, "
+               "sucata, madeira, borracha e plástico; aço especial AK, bimetálico, sinterizado, "
+               "metal duro; recondicionamento). Nomes de clientes, cidades e pessoas.")
     return r.text.strip()
 
 
-PROMPT_EXTRACAO = """Você recebe a transcrição de um vendedor externo da ACOKORTE (aço: chapas, corte, dobra) relatando uma visita a cliente.
+PROMPT_EXTRACAO = """Você recebe a transcrição de um vendedor externo da Açokorte (soluções em corte e desgaste: facas, lâminas e peças de desgaste para indústrias como siderurgia, papel e celulose, sucata, madeira, borracha e plástico; também recondicionamento) relatando uma visita a cliente.
 Hoje é {hoje}.
 Responda SOMENTE um JSON com as chaves:
 - cliente: nome da empresa visitada
@@ -54,8 +56,8 @@ def extrair_campos(texto: str) -> dict[str, str]:
             "cliente": "Gerdau",
             "cidade": "Ouro Branco",
             "contato": "Alex (Compras)",
-            "ata": "Cliente reclamou de 2 dias de atraso na entrega das chapas do último pedido. "
-                   "Pediu cotação de 20 t de chapa grossa para dezembro. "
+            "ata": "Cliente reclamou de 2 dias de atraso na entrega das facas da linha de tiras. "
+                   "Pediu cotação de 12 lâminas de tesoura rotativa para dezembro. "
                    "Vendedor vai enviar a proposta até sexta e voltar ao cliente na semana que vem.",
         }
     r = _cliente().chat.completions.create(

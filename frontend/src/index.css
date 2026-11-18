@@ -1,12 +1,23 @@
 @import "tailwindcss";
 
+/* Identidade Açokorte (acokorte.com.br) — Protótipo B "Aço escuro" */
 @theme {
-  --color-aco-50: #eef4fa;
-  --color-aco-100: #d6e4f1;
-  --color-aco-600: #2a649a;
-  --color-aco-700: #1f4e78;
-  --color-aco-800: #173b5c;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* vermelho da marca */
+  --color-marca-50: #fbeaea;
+  --color-marca-100: #f6d0d1;
+  --color-marca-600: #e3262b; /* vermelho do logo, usado sobre fundo escuro */
+  --color-marca-700: #be0a0f; /* vermelho dos títulos e botões do site */
+  --color-marca-800: #8f070b;
+
+  /* aço / grafite */
+  --color-aco-500: #a9aaad;
+  --color-aco-700: #3a3c40;
+  --color-aco-800: #2b2c2f;
+  --color-aco-900: #1b1c1e;
+  --color-grafite: #3b3b3b;
+
+  --font-sans: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-titulo: "Raleway", "Open Sans", system-ui, sans-serif;
 }
 
 html,
@@ -16,6 +27,21 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-neutral-100 text-grafite antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3 {
+  @apply font-titulo font-bold text-neutral-900;
+}
+
+/* "aço escovado" do topo do site, feito só com CSS */
+.escovado {
+  background:
+    repeating-linear-gradient(115deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(115deg, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 9px),
+    linear-gradient(115deg, #2e3034 0%, #4a4d52 38%, #2a2b2e 62%, #3d3f43 100%);
+  color: #fff;
 }

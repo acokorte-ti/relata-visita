@@ -115,7 +115,7 @@ cd C:\Users\eduardo.macedo\Documents\relata-visita
 | # | Teste | Como fazer | Resultado esperado |
 |---|---|---|---|
 | T1 | Modo demo | `.env` sem chave, gravar qualquer coisa | Formulário preenchido com "Gerdau", envia e aparece no painel |
-| T2 | Gravação real | Com chave, gravar: *"Hoje visitei a Gerdau em Ouro Branco, falei com o Alex de compras, ele pediu cotação de 20 toneladas de chapa grossa e reclamou de atraso. Fico de mandar a proposta sexta."* | Cliente, cidade, contato e ata certos; data de hoje |
+| T2 | Gravação real | Com chave, gravar: *"Hoje visitei a Gerdau em Ouro Branco, falei com o Alex de compras, ele pediu cotação de doze lâminas de tesoura rotativa e reclamou de atraso nas facas. Fico de mandar a proposta sexta."* | Cliente, cidade, contato e ata certos; data de hoje |
 | T3 | Áudio do WhatsApp | Na tela de gravação, **Enviar áudio** com um .ogg/.opus | Transcreve normal |
 | T4 | Barulho | Gravar no carro ou com a janela aberta | Transcrição aceitável. Anote os erros para ajustar o prompt |
 | T5 | Informação faltando | Não falar a cidade | Campo vazio, a IA não inventa |

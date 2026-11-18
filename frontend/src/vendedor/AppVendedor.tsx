@@ -1,8 +1,10 @@
-// App do vendedor: início -> (voz: instrução -> gravação | texto: escrever) -> formulário -> enviado.
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+// App do vendedor (identidade Açokorte, protótipo B "Aço escuro"):
+// início -> (voz: instrução -> gravação | texto: escrever) -> formulário -> enviado.
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ChevronRight, Keyboard, LoaderCircle, LogOut, Mic, Paperclip, Sparkles, Square, X } from "lucide-react";
+import { CheckCircle2, ChevronRight, Keyboard, LoaderCircle, LogOut, Mic, Paperclip, Sparkles, Square } from "lucide-react";
 import { api, dataBR, hojeISO, isoDe, type Rascunho } from "../api";
+import { Simbolo } from "../marca";
 import { useSessao } from "../sessao";
 import { AreaTexto, Aviso, Botao, Campo, Entrada, Modal } from "../ui";
 import { extensaoDe, relogio, useGravador } from "./gravador";
@@ -20,6 +22,11 @@ function segundaFeira(): string {
   const d = new Date();
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   return isoDe(d);
+}
+
+function primeiroDoMes(): string {
+  const d = new Date();
+  return isoDe(new Date(d.getFullYear(), d.getMonth(), 1));
 }
 
 export default function AppVendedor() {
@@ -54,16 +61,16 @@ export default function AppVendedor() {
     if (form) localStorage.setItem(chave, JSON.stringify(form));
   }, [form, chave]);
 
-  const recentes = useQuery({
-    queryKey: ["meus-relatos"],
-    queryFn: () => api.relatos({ limite: 5 }),
-    enabled: etapa === "inicio" || etapa === "enviado",
+  const naInicial = etapa === "inicio" || etapa === "enviado";
+  const recentes = useQuery({ queryKey: ["meus-relatos"], queryFn: () => api.relatos({ limite: 5 }), enabled: naInicial });
+  const contagem = (inicio: string) => ({
+    queryKey: ["meus-relatos-desde", inicio],
+    queryFn: () => api.relatos({ inicio, limite: 1 }),
+    enabled: naInicial,
   });
-  const semana = useQuery({
-    queryKey: ["meus-relatos-semana"],
-    queryFn: () => api.relatos({ inicio: segundaFeira(), limite: 1 }),
-    enabled: etapa === "inicio" || etapa === "enviado",
-  });
+  const hoje = useQuery(contagem(hojeISO()));
+  const semana = useQuery(contagem(segundaFeira()));
+  const mes = useQuery(contagem(primeiroDoMes()));
 
   async function processar(audio: Blob, nome?: string) {
     setEtapa("processando");
@@ -122,7 +129,7 @@ export default function AppVendedor() {
       setForm(null);
       setEtapa("enviado");
       qc.invalidateQueries({ queryKey: ["meus-relatos"] });
-      qc.invalidateQueries({ queryKey: ["meus-relatos-semana"] });
+      qc.invalidateQueries({ queryKey: ["meus-relatos-desde"] });
     } catch (err) {
       setErro(`${(err as Error).message} O relato continua salvo neste celular.`);
     } finally {
@@ -138,106 +145,112 @@ export default function AppVendedor() {
     setEtapa("inicio");
   }
 
+  const voltarAoInicio = () => { grav.cancelar(); setErro(""); setEtapa("inicio"); };
   const set = (campo: keyof Formulario) => (e: { target: { value: string } }) =>
     setForm((f) => (f ? { ...f, [campo]: e.target.value } : f));
 
+  const escura = etapa === "gravar" || etapa === "processando";
+  const subtitulo = {
+    inicio: "Vendedor externo", enviado: "Vendedor externo",
+    gravar: grav.estado === "gravando" ? "Gravando…" : "Relato por voz", processando: "Montando o relatório…",
+    escrever: "Relato por texto", formulario: "Toque para corrigir",
+  }[etapa];
+  const tituloTopo = naInicial ? `Olá, ${usuario!.nome.split(" ")[0]}` : etapa === "formulario" ? "Confira o relatório" : "Relato de visita";
+
   return (
-    <div className="mx-auto flex min-h-full max-w-lg flex-col bg-white sm:my-6 sm:min-h-0 sm:rounded-2xl sm:shadow-sm sm:ring-1 sm:ring-slate-200">
-      <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 pt-[max(1rem,env(safe-area-inset-top))]">
-        <div>
-          <p className="text-base font-semibold text-aco-800">Relata Visita</p>
-          <p className="text-xs text-slate-500">{usuario!.nome}</p>
+    <div className={`mx-auto flex min-h-full max-w-lg flex-col sm:my-6 sm:min-h-0 sm:overflow-hidden sm:rounded-3xl sm:shadow-lg ${escura ? "bg-aco-900" : "bg-neutral-100"}`}>
+      {/* topo em aço escovado */}
+      <header className="escovado flex-none">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))]">
+          <Simbolo altura={24} />
+          <div className="min-w-0">
+            <p className="truncate font-titulo text-[15px] font-bold">{tituloTopo}</p>
+            <p className="text-xs text-aco-500">{subtitulo}</p>
+          </div>
+          <button onClick={sair} className="flex size-9 items-center justify-center rounded-md bg-white/10 hover:bg-white/15" aria-label="Sair">
+            <LogOut className="size-4" />
+          </button>
         </div>
-        <button onClick={sair} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100" aria-label="Sair">
-          <LogOut className="size-5" />
-        </button>
+        {naInicial && (
+          <div className="grid grid-cols-3 gap-2 px-4 pb-4">
+            <Numero rotulo="Hoje" valor={hoje.data?.total} />
+            <Numero rotulo="Semana" valor={semana.data?.total} />
+            <Numero rotulo="Mês" valor={mes.data?.total} />
+          </div>
+        )}
       </header>
 
-      <main className="flex flex-1 flex-col px-5 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        {(etapa === "inicio" || etapa === "enviado") && (
+      <main className="flex flex-1 flex-col gap-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {/* ---------------------------------------------------------- início */}
+        {naInicial && (
           <>
             {etapa === "enviado" && (
-              <div className="mb-5 flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-emerald-800 ring-1 ring-emerald-200">
+              <div className="flex items-center gap-3 rounded-lg bg-emerald-50 px-4 py-3 text-emerald-800 ring-1 ring-emerald-200">
                 <CheckCircle2 className="size-6 shrink-0" aria-hidden />
                 <p className="text-sm">Relatório da visita à <strong>{ultimoCliente}</strong> enviado ao gerente.</p>
               </div>
             )}
-            <div className="rounded-xl bg-slate-50 px-4 py-3">
-              <p className="text-xs text-slate-500">Relatos nesta semana</p>
-              <p className="text-2xl font-semibold">{semana.data?.total ?? "–"}</p>
+            <p className="text-center font-titulo text-[13px] font-extrabold uppercase tracking-[0.12em] text-neutral-900">
+              Iniciar relato de visita
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Quadrado cor="bg-marca-700 active:bg-marca-800" icone={<Mic className="size-7" />} rotulo="Por voz"
+                descricao="Iniciar relato de visita por voz" aoClicar={() => setInstrucao(true)} />
+              <Quadrado cor="bg-aco-800 active:bg-aco-900" icone={<Keyboard className="size-7" />} rotulo="Por texto"
+                descricao="Iniciar relato de visita por texto" aoClicar={() => { setErro(""); setEtapa("escrever"); }} />
             </div>
 
-            <section className="mt-6">
-              <h2 className="mb-2 text-sm font-medium text-slate-500">Últimos envios</h2>
+            <section>
+              <h2 className="mb-2 font-titulo text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-600">Últimos envios</h2>
               {recentes.data?.itens.length ? (
-                <ul className="divide-y divide-slate-100 rounded-xl ring-1 ring-slate-200">
+                <ul className="divide-y divide-neutral-200 overflow-hidden rounded-md border border-neutral-200 bg-white">
                   {recentes.data.itens.map((r) => (
-                    <li key={r.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                      <span className="truncate">
-                        <span className="font-medium">{r.cliente}</span>
-                        {r.cidade && <span className="text-slate-500"> · {r.cidade}</span>}
-                      </span>
-                      <span className="ml-3 shrink-0 text-xs text-slate-500">{dataBR(r.data)}</span>
+                    <li key={r.id} className="grid h-11 grid-cols-[6px_1fr_auto] items-center gap-3 px-3 text-sm">
+                      <span className="size-1.5 rounded-full bg-marca-700" aria-hidden />
+                      <span className="truncate"><b>{r.cliente}</b>{r.cidade && <span className="text-neutral-500"> · {r.cidade}</span>}</span>
+                      <span className="text-xs tabular-nums text-neutral-500">{dataBR(r.data).slice(0, 5)}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">Seus relatos enviados aparecem aqui.</p>
+                <p className="rounded-md border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500">
+                  Seus relatos enviados aparecem aqui.
+                </p>
               )}
             </section>
-
-            <div className="mt-auto flex flex-col gap-3 pt-8">
-              <button
-                onClick={() => setInstrucao(true)}
-                className="flex w-full flex-col items-center gap-2 rounded-2xl bg-aco-700 px-6 py-6 text-white shadow-sm transition active:scale-[0.98] active:bg-aco-800"
-              >
-                <Mic className="size-9" aria-hidden />
-                <span className="text-base font-semibold tracking-wide">INICIAR RELATO DE VISITA POR VOZ</span>
-              </button>
-              <button
-                onClick={() => { setErro(""); setEtapa("escrever"); }}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-6 py-5 text-aco-800 ring-2 ring-aco-700 transition active:scale-[0.98] active:bg-aco-50"
-              >
-                <Keyboard className="size-6" aria-hidden />
-                <span className="text-base font-semibold tracking-wide">INICIAR RELATO DE VISITA POR TEXTO</span>
-              </button>
-            </div>
           </>
         )}
 
-        {(etapa === "gravar" || etapa === "processando") && (
-          <div className="flex flex-1 flex-col">
-            <div className="rounded-xl bg-aco-50 px-4 py-3 text-sm leading-relaxed text-aco-800">{INSTRUCAO}</div>
-            {erro && <div className="mt-4"><Aviso>{erro}</Aviso></div>}
-            {grav.erro && <div className="mt-4"><Aviso>{grav.erro}</Aviso></div>}
+        {/* ---------------------------------------------------------- gravação (tela escura) */}
+        {escura && (
+          <div className="flex flex-1 flex-col gap-4 text-white">
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-relaxed text-neutral-200">{INSTRUCAO}</div>
+            {erro && <Aviso>{erro}</Aviso>}
+            {grav.erro && <Aviso>{grav.erro}</Aviso>}
 
-            <div className="flex flex-1 flex-col items-center justify-center gap-6 py-8">
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 py-6">
               {etapa === "processando" ? (
                 <>
-                  <LoaderCircle className="size-14 animate-spin text-aco-700" aria-hidden />
-                  <p className="text-center text-slate-600">Ouvindo seu relato e preenchendo o formulário…</p>
+                  <LoaderCircle className="size-14 animate-spin text-marca-600" aria-hidden />
+                  <p className="text-center text-aco-500">Ouvindo seu relato e preenchendo o formulário…</p>
                 </>
               ) : (
                 <>
-                  <p className="text-4xl font-semibold tabular-nums" aria-live="polite">{relogio(grav.segundos)}</p>
+                  <p className="font-titulo text-5xl font-extrabold tabular-nums" aria-live="polite">{relogio(grav.segundos)}</p>
                   <div className="flex h-12 items-center gap-1" aria-hidden>
                     {grav.niveis.map((n, i) => (
-                      <span key={i} className={`w-1.5 rounded-full ${grav.estado === "gravando" ? "bg-aco-600" : "bg-slate-300"}`}
+                      <span key={i} className={`w-1.5 rounded-full ${grav.estado === "gravando" ? "bg-marca-600" : "bg-white/20"}`}
                         style={{ height: `${Math.round(n * 100)}%` }} />
                     ))}
                   </div>
-                  {grav.estado === "gravando" ? (
-                    <button onClick={grav.parar} aria-label="Terminar gravação"
-                      className="flex size-24 items-center justify-center rounded-full bg-red-600 text-white shadow-lg ring-8 ring-red-100 transition active:scale-95">
-                      <Square className="size-9 fill-current" />
-                    </button>
-                  ) : (
-                    <button onClick={grav.iniciar} aria-label="Começar a gravar" disabled={grav.estado === "pedindo"}
-                      className="flex size-24 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg ring-8 ring-emerald-100 transition active:scale-95 disabled:opacity-60">
-                      <Mic className="size-11" />
-                    </button>
-                  )}
-                  <p className="text-sm text-slate-500">
+                  <button onClick={grav.estado === "gravando" ? grav.parar : grav.iniciar} disabled={grav.estado === "pedindo"}
+                    aria-label={grav.estado === "gravando" ? "Terminar gravação" : "Começar a gravar"}
+                    className="flex size-28 items-center justify-center rounded-full bg-marca-600 shadow-[0_0_0_10px_rgb(227_38_43/0.22),0_0_0_22px_rgb(227_38_43/0.1)] transition active:scale-95 disabled:opacity-60">
+                    {grav.estado === "gravando"
+                      ? <Square className="size-9 fill-current" />
+                      : <Mic className="size-11" />}
+                  </button>
+                  <p className="text-sm text-aco-500">
                     {grav.estado === "gravando" ? "Toque para terminar" : "Toque no microfone e comece a falar"}
                   </p>
                 </>
@@ -245,79 +258,102 @@ export default function AppVendedor() {
             </div>
 
             {etapa === "gravar" && (
-              <div className="flex items-center justify-between">
-                <Botao variante="fantasma" onClick={() => { grav.cancelar(); setErro(""); setEtapa("inicio"); }}>
-                  <X className="size-4" aria-hidden /> Cancelar
+              <div className="grid grid-cols-2 gap-2">
+                <Botao variante="claro" onClick={voltarAoInicio}>Cancelar</Botao>
+                <Botao variante="claro" onClick={() => arquivo.current?.click()} disabled={grav.estado === "gravando"}>
+                  <Paperclip className="size-4" aria-hidden /> Enviar áudio
                 </Botao>
-                {grav.estado !== "gravando" && (
-                  <>
-                    <Botao variante="fantasma" onClick={() => arquivo.current?.click()}>
-                      <Paperclip className="size-4" aria-hidden /> Enviar áudio
-                    </Botao>
-                    <input ref={arquivo} type="file" accept="audio/*,.opus,.m4a" hidden onChange={escolherArquivo} />
-                  </>
-                )}
+                <input ref={arquivo} type="file" accept="audio/*,.opus,.m4a" hidden onChange={escolherArquivo} />
               </div>
             )}
           </div>
         )}
 
+        {/* ---------------------------------------------------------- relato por texto */}
         {etapa === "escrever" && (
           <form onSubmit={montarDoTexto} className="flex flex-1 flex-col gap-4">
-            <div className="rounded-xl bg-aco-50 px-4 py-3 text-sm leading-relaxed text-aco-800">{INSTRUCAO}</div>
+            <div className="rounded-md border-l-4 border-marca-700 bg-white px-4 py-3 text-sm leading-relaxed text-neutral-700">{INSTRUCAO}</div>
             {erro && <Aviso>{erro}</Aviso>}
-            <Campo rotulo="Relato da visita">
-              <AreaTexto value={texto} onChange={(e) => setTexto(e.target.value)} rows={10} autoFocus
-                placeholder="Visitei a Gerdau em Ouro Branco, falei com o Alex de compras. Ele pediu cotação de 20 t de chapa grossa…" />
-            </Campo>
-            <p className="text-xs text-slate-500">A IA separa o texto nos campos do relatório. Você confere antes de enviar.</p>
-            <div className="mt-auto flex flex-col gap-2 pt-4">
-              <Botao type="submit" variante="primario" carregando={montando} className="py-4 text-base">
-                {!montando && <Sparkles className="size-5" aria-hidden />} Montar relatório
-              </Botao>
-              <Botao type="button" variante="fantasma" onClick={() => { setErro(""); setEtapa("inicio"); }}>
-                Cancelar
+            <div className="flex flex-1 flex-col rounded-xl border border-neutral-200 bg-white p-3">
+              <Campo rotulo="Relato da visita">
+                <AreaTexto value={texto} onChange={(e) => setTexto(e.target.value)} rows={10} autoFocus
+                  placeholder="Visitei a Gerdau em Ouro Branco, falei com o Alex de compras. Ele pediu cotação de 12 lâminas de tesoura rotativa…" />
+              </Campo>
+              <p className="mt-2 text-xs text-neutral-500">A IA separa o texto nos campos do relatório. Você confere antes de enviar.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Botao type="button" onClick={voltarAoInicio}>Cancelar</Botao>
+              <Botao type="submit" variante="primario" carregando={montando}>
+                {!montando && <Sparkles className="size-4" aria-hidden />} Montar
               </Botao>
             </div>
           </form>
         )}
 
+        {/* ---------------------------------------------------------- conferir e enviar */}
         {etapa === "formulario" && form && (
           <form onSubmit={enviar} className="flex flex-1 flex-col gap-4">
-            <div>
-              <h1 className="text-lg font-semibold">Confira o relatório</h1>
-              <p className="text-sm text-slate-500">Toque em qualquer campo para corrigir.</p>
-            </div>
             {erro && <Aviso>{erro}</Aviso>}
-            <Campo rotulo="Nome do vendedor"><Entrada value={usuario!.nome} readOnly /></Campo>
-            <Campo rotulo="Data"><Entrada type="date" value={form.data} onChange={set("data")} max={hojeISO()} required /></Campo>
-            <Campo rotulo="Cliente"><Entrada value={form.cliente} onChange={set("cliente")} required /></Campo>
-            <Campo rotulo="Cidade"><Entrada value={form.cidade} onChange={set("cidade")} /></Campo>
-            <Campo rotulo="Contato"><Entrada value={form.contato} onChange={set("contato")} placeholder="Nome (setor)" /></Campo>
-            <Campo rotulo="Ata de reunião"><AreaTexto value={form.ata} onChange={set("ata")} rows={7} /></Campo>
-            {form.transcricao && (
-              <details className="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <summary className="cursor-pointer font-medium">{form.audio_id ? "O que você falou" : "O que você escreveu"}</summary>
-                <p className="mt-2 leading-relaxed">{form.transcricao}</p>
-              </details>
-            )}
-            <div className="mt-auto flex flex-col gap-2 pt-4">
-              <Botao type="submit" variante="primario" carregando={enviando} className="py-4 text-base tracking-wide">
-                ENVIAR RELATÓRIO <ChevronRight className="size-5" aria-hidden />
+            <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-3">
+              <div className="grid grid-cols-2 gap-2">
+                <Campo rotulo="Vendedor"><Entrada value={usuario!.nome} readOnly /></Campo>
+                <Campo rotulo="Data"><Entrada type="date" value={form.data} onChange={set("data")} max={hojeISO()} required /></Campo>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Campo rotulo="Cliente"><Entrada value={form.cliente} onChange={set("cliente")} required /></Campo>
+                <Campo rotulo="Cidade"><Entrada value={form.cidade} onChange={set("cidade")} /></Campo>
+              </div>
+              <Campo rotulo="Contato"><Entrada value={form.contato} onChange={set("contato")} placeholder="Nome (setor)" /></Campo>
+              <Campo rotulo="Ata de reunião"><AreaTexto value={form.ata} onChange={set("ata")} rows={6} /></Campo>
+              {form.transcricao && (
+                <details className="rounded-md bg-neutral-100 px-3 py-2 text-sm text-neutral-600">
+                  <summary className="cursor-pointer font-semibold">{form.audio_id ? "O que você falou" : "O que você escreveu"}</summary>
+                  <p className="mt-2 leading-relaxed">{form.transcricao}</p>
+                </details>
+              )}
+            </div>
+            <div className="mt-auto grid grid-cols-2 gap-2">
+              <Botao type="button" onClick={descartar}>Descartar</Botao>
+              <Botao type="submit" variante="primario" carregando={enviando}>
+                Enviar {!enviando && <ChevronRight className="size-4" aria-hidden />}
               </Botao>
-              <Botao type="button" variante="fantasma" onClick={descartar}>Descartar</Botao>
             </div>
           </form>
         )}
       </main>
 
       <Modal aberto={instrucao} aoFechar={() => setInstrucao(false)} titulo="Antes de gravar">
-        <p className="leading-relaxed text-slate-700">{INSTRUCAO}</p>
-        <Botao variante="primario" className="mt-6 w-full py-3 text-base"
+        <p className="leading-relaxed text-neutral-700">{INSTRUCAO}</p>
+        <Botao variante="primario" className="mt-6 w-full"
           onClick={() => { setInstrucao(false); setErro(""); setEtapa("gravar"); }}>
           OK
         </Botao>
       </Modal>
     </div>
+  );
+}
+
+function Numero({ rotulo, valor }: { rotulo: string; valor?: number }) {
+  return (
+    <div className="rounded-md bg-white/[0.07] px-3 py-2">
+      <p className="text-[11px] text-aco-500">{rotulo}</p>
+      <p className="font-titulo text-xl font-extrabold tabular-nums">{valor ?? "–"}</p>
+    </div>
+  );
+}
+
+function Quadrado({ cor, icone, rotulo, descricao, aoClicar }: {
+  cor: string;
+  icone: ReactNode;
+  rotulo: string;
+  descricao: string;
+  aoClicar: () => void;
+}) {
+  return (
+    <button onClick={aoClicar} aria-label={descricao}
+      className={`flex aspect-square flex-col items-center justify-center gap-3 rounded-xl p-3 text-white shadow-sm transition active:scale-[0.98] ${cor}`}>
+      <span className="flex size-14 items-center justify-center rounded-full bg-white/15" aria-hidden>{icone}</span>
+      <span className="font-titulo text-[13px] font-extrabold uppercase tracking-wider">{rotulo}</span>
+    </button>
   );
 }

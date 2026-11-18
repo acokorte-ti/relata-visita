@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, UserPlus } from "lucide-react";
-import { api, type Perfil, type Usuario } from "../api";
+import { api, iniciais, type Perfil, type Usuario } from "../api";
 import { useSessao } from "../sessao";
-import { Aviso, Botao, Campo, Carregando, Entrada, Modal } from "../ui";
+import { Aviso, Botao, Campo, Carregando, Entrada, Faixa, Modal } from "../ui";
 
 export default function Vendedores() {
   const qc = useQueryClient();
@@ -20,50 +20,54 @@ export default function Vendedores() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Vendedores</h1>
-          <p className="text-sm text-slate-500">Quem pode entrar no app. Cada um tem usuário e senha próprios.</p>
-        </div>
-        <Botao variante="primario" onClick={() => setNovo(true)}>
-          <UserPlus className="size-4" aria-hidden /> Novo usuário
-        </Botao>
-      </div>
-      {erro && <div className="mb-4"><Aviso>{erro}</Aviso></div>}
-      {usuarios.isPending ? <Carregando /> : (
-        <div className="overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
-          <ul className="divide-y divide-slate-100">
-            {usuarios.data?.map((u) => (
-              <li key={u.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className={`font-medium ${u.ativo ? "" : "text-slate-400 line-through"}`}>{u.nome}</p>
-                  <p className="text-xs text-slate-500">
-                    {u.login} · {u.perfil === "gerente" ? "Gerente" : "Vendedor"}{u.ativo ? "" : " · inativo"}
-                  </p>
-                </div>
-                <Botao variante="fantasma" onClick={() => setSenhaDe(u)}>
-                  <KeyRound className="size-4" aria-hidden /> Nova senha
-                </Botao>
-                {u.id !== eu?.id && (
-                  <Botao variante="secundario" carregando={alternar.isPending && alternar.variables?.id === u.id}
-                    onClick={() => {
-                      if (!u.ativo || confirm(`Desativar ${u.nome}? Ele não vai conseguir mais entrar no app.`)) {
-                        setErro("");
-                        alternar.mutate(u);
-                      }
-                    }}>
-                    {u.ativo ? "Desativar" : "Reativar"}
+    <>
+      <Faixa titulo="Vendedores" subtitulo="Quem pode entrar no app. Cada um tem usuário e senha próprios."
+        acao={
+          <Botao variante="primario" onClick={() => setNovo(true)}>
+            <UserPlus className="size-4" aria-hidden /> Novo usuário
+          </Botao>
+        } />
+      <div className="mx-auto -mt-4 max-w-7xl px-4 pb-10 md:px-8">
+        {erro && <div className="mb-4"><Aviso>{erro}</Aviso></div>}
+        {usuarios.isPending ? <Carregando /> : (
+          <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+            <ul className="divide-y divide-neutral-100">
+              {usuarios.data?.map((u) => (
+                <li key={u.id} className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-x-4 gap-y-3 px-4 py-3 sm:grid-cols-[40px_minmax(0,1fr)_repeat(2,9.5rem)]">
+                  <span className={`flex size-10 items-center justify-center rounded-full font-titulo text-xs font-extrabold ${
+                    !u.ativo ? "bg-neutral-200 text-neutral-400" : u.perfil === "gerente" ? "bg-aco-900 text-white" : "bg-marca-700 text-white"}`} aria-hidden>
+                    {iniciais(u.nome)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className={`truncate font-semibold ${u.ativo ? "" : "text-neutral-400 line-through"}`}>{u.nome}</p>
+                    <p className="text-xs text-neutral-500">
+                      {u.login} · {u.perfil === "gerente" ? "Gerente" : "Vendedor"}{u.ativo ? "" : " · inativo"}
+                    </p>
+                  </div>
+                  <Botao variante="secundario" className="col-start-2 sm:col-start-auto" onClick={() => setSenhaDe(u)}>
+                    <KeyRound className="size-4" aria-hidden /> Senha
                   </Botao>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+                  {u.id !== eu?.id ? (
+                    <Botao variante={u.ativo ? "secundario" : "primario"} carregando={alternar.isPending && alternar.variables?.id === u.id}
+                      className="col-start-2 sm:col-start-auto"
+                      onClick={() => {
+                        if (!u.ativo || confirm(`Desativar ${u.nome}? Essa pessoa não vai conseguir mais entrar no app.`)) {
+                          setErro("");
+                          alternar.mutate(u);
+                        }
+                      }}>
+                      {u.ativo ? "Desativar" : "Reativar"}
+                    </Botao>
+                  ) : <span className="hidden sm:block" />}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
       <NovoUsuario aberto={novo} aoFechar={() => setNovo(false)} />
       <NovaSenha usuario={senhaDe} aoFechar={() => setSenhaDe(null)} />
-    </div>
+    </>
   );
 }
 
@@ -96,7 +100,7 @@ function NovoUsuario({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => vo
         </Campo>
         <Campo rotulo="Perfil">
           <select value={dados.perfil} onChange={(e) => setDados({ ...dados, perfil: e.target.value as Perfil })}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base">
+            className="h-11 w-full rounded-md border border-neutral-300 bg-white px-3 text-base focus:border-marca-700 focus:outline-none focus:ring-2 focus:ring-marca-100">
             <option value="vendedor">Vendedor (usa o app no celular)</option>
             <option value="gerente">Gerente (vê o painel)</option>
           </select>
