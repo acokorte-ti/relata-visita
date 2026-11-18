@@ -1,0 +1,14 @@
+fastapi>=0.163
+uvicorn[standard]>=0.54
+sqlalchemy>=2.1
+alembic>=1.20
+psycopg[binary]>=3.3
+argon2-cffi>=25.1
+itsdangerous>=2.2
+python-multipart>=0.0.34
+python-dotenv>=1.2
+openai>=3.55
+openpyxl>=3.1
+# testes
+pytest>=9.2
+httpx>=0.28
